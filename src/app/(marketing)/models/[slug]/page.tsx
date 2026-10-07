@@ -45,7 +45,7 @@ export default async function ModelDetailPage({ params }: PageProps) {
           Catalog
         </Link>
         <div className="mt-6 flex items-center gap-3">
-          <ProviderMark name={model.provider} />
+          <ProviderMark slug={model.providerSlug} name={model.provider} size="md" />
           <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">{model.provider}</p>
         </div>
         <h1 className="mt-3 text-[clamp(2.25rem,4vw,3.5rem)] leading-[1.02] font-medium tracking-[-0.04em]">

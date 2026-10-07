@@ -5,9 +5,9 @@ import { ProviderMark } from "@/components/models/ProviderMark";
 
 export function ModelCard({ model }: { model: Model }) {
   return (
-    <Link href={`/models/${model.slug}`} className="block border-b border-border px-4 py-4 hover:bg-background">
+    <Link href={`/models/${model.slug}`} className="block border-b border-border px-6 py-4 hover:bg-[#f7f8fa] md:px-10">
       <span className="flex items-center gap-3">
-        <ProviderMark name={model.provider} />
+        <ProviderMark slug={model.providerSlug} name={model.provider} />
         <span>
           <span className="block text-[14px] font-medium">{model.displayName}</span>
           <span className="block text-[12px] text-muted">{model.provider}</span>

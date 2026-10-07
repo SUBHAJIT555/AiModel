@@ -19,7 +19,7 @@ const quickFilters: Array<{ id: "all" | ModelCategory; label: string }> = [
 ];
 
 const fieldClass =
-  "h-9 rounded-[10px] border border-border bg-surface px-3 text-[13px] text-foreground outline-none focus:border-border-strong";
+  "h-9 rounded-[10px] border border-border bg-white px-3 text-[13px] text-foreground outline-none focus:border-[#0366ff]";
 
 export function ModelDirectory({ models }: { models: Model[] }) {
   const [query, setQuery] = useState("");
@@ -64,7 +64,7 @@ export function ModelDirectory({ models }: { models: Model[] }) {
     );
   }, [models]);
 
-  const featured = models.filter((model) => model.featured).slice(0, 4);
+  const featured = models.filter((model) => model.featured);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -95,19 +95,22 @@ export function ModelDirectory({ models }: { models: Model[] }) {
 
   return (
     <div>
-      <div className="grid gap-3 border border-border bg-surface p-3 md:grid-cols-4">
-        <input
-          className={`${fieldClass} md:col-span-2`}
-          placeholder="Search models, providers, capabilities"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <select className={fieldClass} value={sort} onChange={(event) => setSort(event.target.value)}>
-          <option value="name">Sort by name</option>
-          <option value="provider">Sort by provider</option>
-          <option value="context">Sort by context</option>
-        </select>
-        <p className="flex h-9 items-center font-mono text-[12px] text-muted">{visible.length} shown</p>
+      <div className="grid gap-3 border-b border-border px-6 py-5 md:px-10">
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-center">
+          <input
+            className={fieldClass}
+            placeholder="Search models, providers, capabilities"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <select className={fieldClass} value={sort} onChange={(event) => setSort(event.target.value)}>
+            <option value="name">Sort by name</option>
+            <option value="provider">Sort by provider</option>
+            <option value="context">Sort by context</option>
+          </select>
+          <p className="text-[13px] text-muted">{visible.length} models</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <select className={fieldClass} value={provider} onChange={(event) => setProvider(event.target.value)}>
           <option value="all">All providers</option>
           {providers.map((item) => (
@@ -147,38 +150,42 @@ export function ModelDirectory({ models }: { models: Model[] }) {
           <option value="200000">200k+</option>
           <option value="1000000">1M+</option>
         </select>
+        </div>
       </div>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto border-b border-border px-6 py-4 md:px-10">
         {quickFilters.map((filter) => {
           const active = category === filter.id || (filter.id === "all" && category === "all");
           return (
             <button
               key={filter.id}
               type="button"
-              className={`h-8 shrink-0 rounded-[10px] border px-3 font-mono text-[12px] ${
-                active ? "border-foreground bg-foreground text-background" : "border-border bg-surface text-muted"
+              className={`h-8 shrink-0 rounded-[10px] border px-3 text-[13px] font-medium ${
+                active ? "border-foreground bg-foreground text-white" : "border-border bg-white text-muted hover:text-foreground"
               }`}
               onClick={() => applyQuick(filter.id)}
             >
-              {filter.label} {counts[filter.id]}
+              {filter.label}
+              <span className={active ? "text-white/70" : "text-muted"}> {counts[filter.id]}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="mt-8 grid gap-3 md:grid-cols-4">
+      <div className="grid gap-px border-b border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
         {featured.map((model) => (
-          <Link key={model.slug} href={`/models/${model.slug}`} className="border border-border bg-surface p-4 hover:bg-background">
-            <ProviderMark name={model.provider} />
-            <p className="mt-3 text-[14px] font-medium">{model.displayName}</p>
-            <p className="mt-1 text-[12px] text-muted">{model.provider}</p>
+          <Link key={model.slug} href={`/models/${model.slug}`} className="flex items-center gap-3 bg-surface px-6 py-5 transition-colors hover:bg-[#f7f8fa] md:px-10">
+            <ProviderMark slug={model.providerSlug} name={model.provider} size="md" />
+            <span className="min-w-0">
+              <span className="block truncate text-[15px] font-medium tracking-[-0.02em]">{model.displayName}</span>
+              <span className="block truncate text-[13px] text-muted">{model.provider}</span>
+            </span>
           </Link>
         ))}
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-[12px] border border-border bg-surface">
-        <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_72px_88px_88px_110px_minmax(0,1fr)] gap-3 border-b border-border px-4 py-2 font-mono text-[11px] tracking-[0.08em] text-muted uppercase md:grid">
+      <div className="bg-surface">
+        <div className="hidden grid-cols-[minmax(0,1.4fr)_132px_64px_120px_100px_100px_minmax(0,1fr)] gap-3 border-b border-border px-6 py-3 text-[12px] text-muted md:grid md:px-10">
           <span>Model</span>
           <span>Provider</span>
           <span>Context</span>
