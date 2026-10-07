@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@lucasmarkes/hairline": "^0.3.0",
+    "@tabler/icons-react": "^3.49.0",
     "lucide-react": "^1.52.0",
     "motion": "^14.0.0",
     "next": "^16.4.0",
