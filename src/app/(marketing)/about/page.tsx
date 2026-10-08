@@ -1,17 +1,37 @@
 import type { Metadata } from "next";
-import { RoutePlaceholder } from "@/components/sections/RoutePlaceholder";
+import { AboutAudience } from "@/components/about/AboutAudience";
+import { AboutClose } from "@/components/about/AboutClose";
+import { AboutHero } from "@/components/about/AboutHero";
+import { AboutStats } from "@/components/about/AboutStats";
+import { AboutStory } from "@/components/about/AboutStory";
+import { AboutTestimonials } from "@/components/about/AboutTestimonials";
+import { AboutWhy } from "@/components/about/AboutWhy";
+import { catalogProviders, models } from "@/data/models";
+import { pricingPlans } from "@/data/pricing";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Why a single model gateway exists, and how the product is scoped.",
+  description:
+    "Aimodel is a model gateway: one catalog, rupee pricing, and a request that stays the same when the provider changes.",
 };
 
 export default function AboutPage() {
+  const modalities = new Set(models.flatMap((model) => model.modalities)).size;
+
   return (
-    <RoutePlaceholder
-      eyebrow="Company"
-      title="About"
-      description="Editorial page for the product’s scope. The full story is a later phase."
-    />
+    <div className="bg-surface -mt-[5.5rem] pt-[5.5rem] md:-mt-[7.5rem] md:pt-[7.5rem]">
+      <AboutHero />
+      <AboutStory />
+      <AboutAudience />
+      <AboutStats
+        models={models.length}
+        providers={catalogProviders.length}
+        plans={pricingPlans.length}
+        modalities={modalities}
+      />
+      <AboutTestimonials />
+      <AboutWhy />
+      <AboutClose />
+    </div>
   );
 }

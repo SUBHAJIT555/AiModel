@@ -1,15 +1,17 @@
 "use client";
 
-import { Branches, Cabinet, Laptop, Patch, Phosphor, Router, Terminal, Terrain } from "@lucasmarkes/hairline/react";
+import { Branches, Cabinet, Dish, Laptop, Patch, Phosphor, Plot, Router, Terminal, Terrain } from "@lucasmarkes/hairline/react";
 import { useReducedMotion } from "motion/react";
 import { cn } from "@/lib/cn";
 
 const figures = {
   branches: Branches,
   cabinet: Cabinet,
+  dish: Dish,
   laptop: Laptop,
   patch: Patch,
   phosphor: Phosphor,
+  plot: Plot,
   router: Router,
   terminal: Terminal,
   terrain: Terrain,

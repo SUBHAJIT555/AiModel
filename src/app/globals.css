@@ -1141,4 +1141,48 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  .brand-cycle__item {
+    animation: none !important;
+    opacity: 0;
+    filter: none;
+    transform: none;
+  }
+
+  .brand-cycle__item:first-child {
+    opacity: 1;
+  }
+}
+
+.brand-cycle {
+  --duration: 12s;
+  --items: 3;
+}
+
+.brand-cycle__item {
+  opacity: 0;
+  animation: brand-cycle var(--duration) linear infinite;
+  animation-delay: calc(var(--duration) / var(--items) * var(--i) * -1);
+}
+
+@keyframes brand-cycle {
+  0% {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(6px);
+  }
+
+  6%,
+  33% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+
+  39%,
+  100% {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(-6px);
+  }
 }

@@ -23,7 +23,7 @@ export function FaqSection() {
             className="mt-10 hidden w-full max-w-[300px] lg:block"
           />
         </Reveal>
-        <Reveal delay={0.08} className="border-t border-border px-6 py-10 md:px-10 lg:border-t-0 lg:border-l lg:px-12 lg:py-16">
+        <Reveal delay={0.08} className="border-t border-border px-6 py-10 md:px-10 lg:border-t-0 lg:px-12 lg:py-16">
           <div className="flex flex-col gap-8">
             {faqCategories.map((category) => (
               <div key={category.title}>

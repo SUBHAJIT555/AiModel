@@ -1,4 +1,5 @@
 import { LogoMark } from "@/components/layout/LogoMark";
+import { BrandCycle } from "@/components/sections/home/BrandCycle";
 import { Reveal } from "@/components/motion/Reveal";
 import { Button } from "@/components/ui/Button";
 
@@ -21,6 +22,7 @@ export function ServicesCta() {
               Build against
               <span className="block">one interface.</span>
             </h2>
+            <BrandCycle />
             <p className="mx-auto mt-5 max-w-md text-[15px] leading-7 text-muted">
               Explore the model catalog and see how the platform fits into a complete frontend workflow.
             </p>

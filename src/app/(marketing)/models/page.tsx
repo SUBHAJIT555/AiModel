@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { ArrowRight } from "lucide-react";
 import { models } from "@/data/models";
 import { ModelDirectory } from "@/components/models/ModelDirectory";
+import { BrandCycle } from "@/components/sections/home/BrandCycle";
 import { HeroBackdrop } from "@/components/sections/HeroBackdrop";
 import { Button } from "@/components/ui/Button";
 
@@ -28,6 +29,7 @@ export default function ModelsPage() {
               <span className="text-primary">One</span> interface.
             </span>
           </h1>
+          <BrandCycle />
           <p className="mt-5 max-w-[440px] text-[15px] leading-7 text-muted md:text-[16px]">
             Explore AI models across reasoning, coding, vision, image, video and audio through one unified interface.
           </p>

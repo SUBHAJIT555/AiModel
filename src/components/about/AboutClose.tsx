@@ -3,7 +3,7 @@ import { BrandCycle } from "@/components/sections/home/BrandCycle";
 import { Reveal } from "@/components/motion/Reveal";
 import { Button } from "@/components/ui/Button";
 
-export function FinalCta() {
+export function AboutClose() {
   return (
     <section className="bg-surface">
       <div className="home-frame border-t border-border">
@@ -19,12 +19,12 @@ export function FinalCta() {
               </span>
             </div>
             <h2 className="mx-auto max-w-[12em] text-[clamp(2.5rem,5vw,3.75rem)] leading-[1.02] font-medium tracking-[-0.045em]">
-              One API.
-              <span className="block">Hundreds of possibilities.</span>
+              Open the catalog
+              <span className="block">behind the brand.</span>
             </h2>
             <BrandCycle />
             <p className="mx-auto mt-5 max-w-md text-[15px] leading-7 text-muted">
-              Explore models, compare capabilities and experience the complete frontend workflow.
+              Browse the models, then compare Route, Volume, and Command.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button href="/models">Explore models</Button>

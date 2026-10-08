@@ -3,6 +3,7 @@
 import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { easeOut } from "@/components/motion/transitions";
+import { BrandCycle } from "@/components/sections/home/BrandCycle";
 import { HeroBackdrop } from "@/components/sections/HeroBackdrop";
 import { Button } from "@/components/ui/Button";
 
@@ -35,6 +36,7 @@ export function ServicesHero() {
                 your app and <span className="text-primary">the models.</span>
               </span>
             </motion.h1>
+            <BrandCycle />
             <motion.p
               className="mt-5 max-w-[440px] text-[15px] leading-7 text-muted md:text-[16px]"
               {...motionProps(10, 0.16)}

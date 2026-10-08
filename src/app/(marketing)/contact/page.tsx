@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import { RoutePlaceholder } from "@/components/sections/RoutePlaceholder";
+import { ContactForm } from "@/components/contact/ContactForm";
+import { ContactHero } from "@/components/contact/ContactHero";
+import { ContactOffice } from "@/components/contact/ContactOffice";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Talk to the team about routing, fallbacks, or an enterprise workspace.",
+  description: "Write, call, or visit the Bengaluru office. The form on this page is a demonstration.",
 };
 
 export default function ContactPage() {
   return (
-    <RoutePlaceholder
-      eyebrow="Sales"
-      title="Contact"
-      description="The contact form is a later phase. This route is reserved so the navigation can resolve."
-    />
+    <div className="bg-surface -mt-[5.5rem] pt-[5.5rem] md:-mt-[7.5rem] md:pt-[7.5rem]">
+      <ContactHero />
+      <ContactOffice />
+      <ContactForm />
+    </div>
   );
 }
