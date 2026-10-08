@@ -34,7 +34,7 @@ export function PricingBoard() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">Plans</p>
-          <h2 className="mt-2 text-[22px] font-medium tracking-[-0.03em]">Route, Volume, and Command.</h2>
+          <h2 className="mt-2 text-[22px] font-medium tracking-[-0.03em]">Three ways to pay for the route.</h2>
         </div>
         <div className="inline-flex self-start rounded-full bg-[#f1f3f6] p-1" role="group" aria-label="Billing period">
           {(["monthly", "annual"] as const).map((cycle) => {
@@ -62,7 +62,7 @@ export function PricingBoard() {
         </div>
       </div>
       <p className="mt-3 max-w-xl text-[13px] leading-6 text-muted">
-        Monthly and annual change Route and Command. Volume stays on the token rate.
+        A year on Route or Command is ten months of the monthly fee. Volume does not switch. It stays on the token rate.
       </p>
 
       <ul className="mt-8 grid items-center gap-4 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.24fr)_minmax(0,0.88fr)] lg:gap-2">
@@ -109,8 +109,8 @@ export function PricingBoard() {
                 ) : (
                   <p className="text-[13px] leading-6 text-muted">
                     {plan.id === "command"
-                      ? "Highest platform fee. Annual includes two months."
-                      : "Smaller platform fee. Annual includes two months."}
+                      ? "The higher fee. A year is ten months of the monthly price."
+                      : "The smaller fee. A year is ten months of the monthly price."}
                   </p>
                 )}
               </div>

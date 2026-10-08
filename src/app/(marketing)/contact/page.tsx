@@ -5,7 +5,7 @@ import { ContactOffice } from "@/components/contact/ContactOffice";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Write, call, or visit the Bengaluru office. The form on this page is a demonstration.",
+  description: "Ask about a model, a route, or a plan. The form on this page does not send the message.",
 };
 
 export default function ContactPage() {

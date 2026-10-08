@@ -5,16 +5,16 @@ import { cn } from "@/lib/cn";
 
 const channels = [
   {
-    title: "Email support",
-    body: "Questions about the catalog, routing, and this demonstration.",
+    title: "Email",
+    body: "A model, a fallback, or which provider answered.",
     action: contactOffice.email,
     href: `mailto:${contactOffice.email}`,
     icon: Mail,
   },
   {
-    title: "Sales & quotes",
-    body: "Need a route, a volume rate, or Command? Leave a note.",
-    action: "Write a note",
+    title: "A plan",
+    body: "Route, Volume, or Command. Say which, and how many tokens you expect.",
+    action: "Leave a note",
     href: "#message",
     icon: MessageSquare,
   },
@@ -48,17 +48,18 @@ export function ContactHero() {
       />
       <div className="relative z-10 mx-auto max-w-3xl px-6 pb-4 text-center">
         <h1 className="text-[clamp(2.25rem,4.6vw,3.5rem)] leading-[1.08] font-medium tracking-[-0.04em]">
-          We’d love to hear from you
+          Ask about the call
+          <span className="block">you want to send.</span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-[16px] leading-7 text-muted">
-          Based in Bengaluru. Serving teams across India.
+          A model, a route, or a plan. Say which one, and what the call has to do.
         </p>
       </div>
       <div className="relative z-10 px-4 md:px-8">
         <ContactWorldMap className="py-2 md:py-4" />
       </div>
-      <div className="home-frame relative z-10 px-6 pt-8 pb-12 md:pb-14">
-        <div className="grid border-t border-dashed border-border pt-10 md:grid-cols-3 md:pt-12">
+      <div className="home-frame relative z-10 px-6 pt-6 pb-8 md:pb-10">
+        <div className="grid border-t border-dashed border-border pt-6 md:grid-cols-3 md:pt-8">
           {channels.map((channel, index) => {
             const Icon = channel.icon;
             return (

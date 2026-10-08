@@ -22,7 +22,7 @@ export function ServicesHero() {
       <div className="home-frame">
         <div className="relative">
           <HeroBackdrop src="/heroes/services.jpg" />
-          <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center px-6 pt-16 pb-16 text-center md:pt-24 md:pb-20">
+          <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center px-6 pt-10 pb-10 text-center md:pt-14 md:pb-12">
             <motion.p className="inline-flex items-center gap-2 text-[14px] font-medium text-primary" {...motionProps(8, 0)}>
               <span aria-hidden className="size-3.5 rounded-[4px] bg-primary" />
               Platform
@@ -31,9 +31,9 @@ export function ServicesHero() {
               className="mt-6 text-[clamp(2.75rem,5vw,4.25rem)] leading-[1.02] font-medium tracking-[-0.04em] text-balance"
               {...motionProps(12, 0.08)}
             >
-              Everything between
+              Ship the product.
               <span className="block">
-                your app and <span className="text-primary">the models.</span>
+                We'll handle the <span className="text-primary">route</span>.
               </span>
             </motion.h1>
             <BrandCycle />
@@ -41,15 +41,15 @@ export function ServicesHero() {
               className="mt-5 max-w-[440px] text-[15px] leading-7 text-muted md:text-[16px]"
               {...motionProps(10, 0.16)}
             >
-              Use one API to route, retry, observe and control requests across your model stack.
+              One request for chat, image, audio, and video. If the first model fails, the next one answers. You can see which.
             </motion.p>
             <motion.div className="mt-8 flex flex-wrap items-center justify-center gap-3" {...motionProps(0, 0.24)}>
-              <Button href="/pricing">
-                Start building
+              <Button href="/models">
+                See the models
                 <ArrowRight aria-hidden strokeWidth={1.75} />
               </Button>
-              <Button href="/models" variant="secondary">
-                Explore models
+              <Button href="/contact" variant="secondary">
+                Talk to us
               </Button>
             </motion.div>
           </div>

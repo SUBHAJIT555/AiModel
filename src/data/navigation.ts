@@ -1,5 +1,6 @@
-import type { FooterColumn, NavItem, SocialLink } from "@/types/navigation";
+import type { FooterColumn, NavItem } from "@/types/navigation";
 import { models } from "@/data/models";
+import { services } from "@/data/services";
 
 const featuredModels = models
   .filter((model) => model.featured)
@@ -18,12 +19,11 @@ export const primaryNav: NavItem[] = [
 
 export const footerColumns: FooterColumn[] = [
   {
-    title: "Product",
+    title: "Company",
     links: [
-      { label: "Unified API", href: "/services#unified-api" },
-      { label: "Smart Routing", href: "/services#smart-routing" },
-      { label: "Pricing", href: "/pricing" },
-      { label: "Checkout", href: "/checkout" },
+      { label: "Home", href: "/" },
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
     ],
   },
   {
@@ -34,18 +34,11 @@ export const footerColumns: FooterColumn[] = [
     ],
   },
   {
-    title: "Platform",
+    title: "Services",
     links: [
-      { label: "Observability", href: "/services#observability" },
-      { label: "Fallbacks", href: "/services#fallbacks" },
-      { label: "Contact", href: "/contact" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About", href: "/about" },
-      { label: "Contact", href: "/contact" },
+      { label: "All services", href: "/services" },
+      ...services.map((service) => ({ label: service.name, href: `/services/${service.slug}` })),
+      { label: "Pricing", href: "/pricing" },
     ],
   },
   {
@@ -57,10 +50,4 @@ export const footerColumns: FooterColumn[] = [
       { label: "Acceptable use", href: "/legal/acceptable-use" },
     ],
   },
-];
-
-export const socialLinks: SocialLink[] = [
-  { label: "GitHub", href: "https://github.com" },
-  { label: "X", href: "https://x.com" },
-  { label: "LinkedIn", href: "https://www.linkedin.com" },
 ];

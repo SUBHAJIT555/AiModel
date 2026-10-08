@@ -15,8 +15,3 @@ export type FooterColumn = {
   title: string;
   links: NavChild[];
 };
-
-export type SocialLink = {
-  label: string;
-  href: string;
-};

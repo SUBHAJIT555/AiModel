@@ -101,11 +101,11 @@ export default async function ModelDetailPage({ params }: PageProps) {
   const quote = quoteFor(model);
 
   return (
-    <section className="bg-surface -mt-[5.5rem] pt-[5.5rem] pb-20 md:-mt-[7.5rem] md:pt-[7.5rem]">
+    <section className="bg-surface -mt-[5.5rem] pt-[5.5rem] pb-10 md:-mt-[7.5rem] md:pt-[7.5rem]">
       <div className="home-frame">
         <div className="relative overflow-hidden">
           <BrandWatermark slug={model.providerSlug} />
-          <div className="relative z-10 grid items-center gap-10 px-6 pt-14 pb-14 md:px-10 md:pt-20 md:pb-16 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-16">
+          <div className="relative z-10 grid items-center gap-10 px-6 pt-10 pb-10 md:px-10 md:pt-14 md:pb-12 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-16">
           <div>
             <p className="inline-flex items-center gap-2.5 text-[14px] font-medium">
               <ProviderMark slug={model.providerSlug} name={model.provider} size="md" />

@@ -9,37 +9,34 @@ import { Button } from "@/components/ui/Button";
 
 export const metadata: Metadata = {
   title: "Models",
-  description: "Explore a demonstration catalog of AI models across reasoning, coding, vision, image, video, and audio.",
+  description: "The Aimodel catalog: reasoning, coding, vision, image, video, and audio.",
 };
 
 export default function ModelsPage() {
   return (
-    <section className="bg-surface -mt-[5.5rem] pt-[5.5rem] pb-16 md:-mt-[7.5rem] md:pt-[7.5rem]">
+    <section className="bg-surface -mt-[5.5rem] pt-[5.5rem] pb-8 md:-mt-[7.5rem] md:pt-[7.5rem]">
       <div className="home-frame">
         <div className="relative">
           <HeroBackdrop src="/heroes/models.jpg" />
-          <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center px-6 pt-14 pb-12 text-center md:pt-20 md:pb-16">
+          <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center px-6 pt-10 pb-8 text-center md:pt-14 md:pb-10">
           <p className="inline-flex items-center gap-2 text-[14px] font-medium text-primary">
             <span aria-hidden className="size-3.5 rounded-[4px] bg-primary" />
             Catalog
           </p>
           <h1 className="mt-6 text-[clamp(2.75rem,5vw,4.25rem)] leading-[1.02] font-medium tracking-[-0.04em] text-balance">
-            Every model.
+            Aim at the hard part.
             <span className="block">
-              <span className="text-primary">One</span> interface.
+              Then pick the <span className="text-primary">model</span>.
             </span>
           </h1>
           <BrandCycle />
           <p className="mt-5 max-w-[440px] text-[15px] leading-7 text-muted md:text-[16px]">
-            Explore AI models across reasoning, coding, vision, image, video and audio through one unified interface.
+            Some of these reason. Some write code. Some make an image, a clip, or a voice. Open a row and see which.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button href="/pricing">
-              Start building
+            <Button href="/contact">
+              Ask about a model
               <ArrowRight aria-hidden strokeWidth={1.75} />
-            </Button>
-            <Button href="/pricing" variant="secondary">
-              View pricing
             </Button>
           </div>
           </div>
@@ -47,12 +44,11 @@ export default function ModelsPage() {
         <Suspense>
           <ModelDirectory models={models} />
         </Suspense>
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border px-6 py-8 md:px-10">
+        {/* <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border px-6 py-8 md:px-10">
           <p className="max-w-md text-[14px] leading-6 text-muted">
-            Compare plans for the demo workspace. Pricing on this page is illustrative.
+            Open a row for the provider, the context length, and a sample request.
           </p>
-          <Button href="/pricing">View pricing</Button>
-        </div>
+        </div> */}
       </div>
     </section>
   );

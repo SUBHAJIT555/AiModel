@@ -17,7 +17,7 @@ export function HeroIntro() {
   const motionProps = (y: number, delay: number) => (reduce ? {} : fade(y, delay));
 
   return (
-    <div className="mx-auto flex max-w-[760px] flex-col items-center px-6 pt-16 text-center md:pt-24">
+    <div className="mx-auto flex max-w-[760px] flex-col items-center px-6 pt-10 text-center md:pt-14">
       <motion.p
         className="inline-flex items-center gap-2 text-[14px] font-medium text-primary"
         {...motionProps(8, 0)}

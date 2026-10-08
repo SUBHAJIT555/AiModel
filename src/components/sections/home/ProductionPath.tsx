@@ -6,20 +6,20 @@ import { Reveal } from "@/components/motion/Reveal";
 
 const steps = [
   {
-    title: "Choose your model",
-    body: "Browse the model catalog or select an automatic routing strategy.",
+    title: "Pick from the catalog",
+    body: "Or skip the choice and let a policy pick by price or speed.",
   },
   {
-    title: "Integrate one API",
-    body: "Use the same request structure across supported model categories.",
+    title: "Point the client at one URL",
+    body: "Chat, image, and audio use that same body.",
   },
   {
-    title: "Test your workflow",
-    body: "Preview requests, responses, usage and routing behavior through the demo interface.",
+    title: "Send a sample",
+    body: "You can see the request, the reply, and the token count on the model page.",
   },
   {
-    title: "Go live",
-    body: "Move from the template flow into your own production integration.",
+    title: "Leave the client alone",
+    body: "Later you change the model field. You do not rewrite the integration.",
   },
 ];
 
@@ -46,10 +46,10 @@ export function ProductionPath() {
   return (
     <section className="bg-surface">
       <div className="home-frame grid border-t border-border lg:grid-cols-2">
-        <div className="border-b border-border px-6 py-14 md:px-10 lg:border-r lg:border-b-0 lg:px-12 lg:py-16">
+        <div className="border-b border-border px-6 py-10 md:px-10 lg:border-r lg:border-b-0 lg:px-12 lg:py-12">
           <Reveal>
             <h2 className="max-w-[11em] text-[clamp(2rem,3vw,2.5rem)] leading-[1.12] font-medium tracking-[-0.03em]">
-              Your path from <span className="text-primary">one API</span> to production.
+              Open the catalog. Ship on <span className="text-primary">one API</span>.
             </h2>
           </Reveal>
           <HairlineFigure
@@ -59,7 +59,7 @@ export function ProductionPath() {
             className="figure-mask mt-10 w-full max-w-[460px]"
           />
         </div>
-        <ol className="flex flex-col justify-center gap-10 px-6 py-14 md:px-10 lg:px-12 lg:py-20">
+        <ol className="flex flex-col justify-center gap-8 px-6 py-10 md:px-10 lg:px-12 lg:py-12">
           {steps.map((step, index) => (
             <li
               key={step.title}

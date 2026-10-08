@@ -39,8 +39,8 @@ export function WhyChooseSection() {
     <section id="why-aimodel" className="scroll-mt-28 bg-surface">
       <div className="home-frame border-t border-border">
         <Reveal>
-          <h2 className="max-w-xl px-6 py-14 text-[clamp(1.875rem,2.6vw,2.25rem)] leading-[1.15] font-medium tracking-[-0.03em] md:px-10 md:py-16">
-            Why choose us.
+          <h2 className="max-w-xl px-6 py-8 text-[clamp(1.875rem,2.6vw,2.25rem)] leading-[1.15] font-medium tracking-[-0.03em] md:px-10 md:py-10">
+            What your app no longer has to do.
           </h2>
         </Reveal>
         <div className="grid border-t border-border bg-surface-subtle md:grid-cols-3">

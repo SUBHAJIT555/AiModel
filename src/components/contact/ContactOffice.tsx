@@ -13,14 +13,14 @@ export function ContactOffice() {
           }}
         >
           <div className="max-w-sm">
-            <p className="text-[13px] text-muted">Our location</p>
+            <p className="text-[13px] text-muted">Office</p>
             <h2 className="mt-1.5 text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.1] font-medium tracking-[-0.03em]">
-              Visit our office
+              Bengaluru, for now
             </h2>
             <p className="mt-2 text-[15px] leading-7 text-muted">
-              Find us in Indiranagar.{" "}
+              The address is a stand-in.{" "}
               <span className="text-foreground underline decoration-primary/40 decoration-dotted underline-offset-4">
-                Open for a walk through the catalog, the plans, and the route.
+                It will be replaced when the office details are final.
               </span>
             </p>
           </div>

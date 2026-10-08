@@ -3,33 +3,33 @@ import { Reveal } from "@/components/motion/Reveal";
 
 const features = [
   {
-    title: "Usage analytics",
-    body: "Monitor requests, tokens, latency and spend across models.",
+    title: "Usage",
+    body: "Requests, tokens, latency, and spend, listed by model.",
     icon: BarChart3,
   },
   {
-    title: "Provider fallback",
-    body: "Automatically retry requests using a compatible alternative.",
+    title: "Fallback",
+    body: "The next model on your list takes the call when the first one fails.",
     icon: RefreshCw,
   },
   {
-    title: "Model comparison",
-    body: "Compare model capabilities, context limits and demo pricing.",
+    title: "Side by side",
+    body: "Context length, what the model accepts, and the rupee rate.",
     icon: ArrowLeftRight,
   },
   {
-    title: "Structured output",
-    body: "Present a consistent response structure regardless of underlying provider.",
+    title: "Same JSON back",
+    body: "The response fields do not change when the provider does.",
     icon: Braces,
   },
   {
-    title: "SDK-ready integration",
-    body: "Show JavaScript, Python, PHP, Go and other integration examples.",
+    title: "A few languages",
+    body: "JavaScript, Python, PHP, and Go. Underneath, it is the same HTTP call.",
     icon: Code2,
   },
   {
-    title: "Cost visibility",
-    body: "Estimate model usage and compare demo pricing before selecting a route.",
+    title: "The price first",
+    body: "Each model page shows a rupee rate before you pick a route.",
     icon: CircleDollarSign,
   },
 ];
@@ -39,8 +39,8 @@ export function FeatureGrid() {
     <section className="bg-surface">
       <div className="home-frame border-t border-border">
         <Reveal>
-          <h2 className="max-w-xl px-6 py-14 text-[clamp(1.875rem,2.6vw,2.25rem)] leading-[1.15] font-medium tracking-[-0.03em] md:px-10 md:py-16">
-            ...and everything else your AI product needs.
+          <h2 className="max-w-xl px-6 py-8 text-[clamp(1.875rem,2.6vw,2.25rem)] leading-[1.15] font-medium tracking-[-0.03em] md:px-10 md:py-10">
+            Worth a look before you choose
           </h2>
         </Reveal>
         <div className="grid border-t border-border bg-surface-subtle md:grid-cols-3">

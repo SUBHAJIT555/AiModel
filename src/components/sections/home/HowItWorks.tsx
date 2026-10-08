@@ -10,16 +10,16 @@ const panelShadow = "shadow-[0_22px_50px_-18px_rgb(17_19_24/0.28),0_8px_20px_-12
 
 const steps = [
   {
-    title: "Send a request through one endpoint",
-    body: "Use one request shape for every model family in the catalog.",
+    title: "Post to one endpoint",
+    body: "Chat, embeddings, images, and audio share that URL. The model is a field in the body.",
   },
   {
-    title: "Choose a model or routing policy",
-    body: "Pin a model, or let a policy choose by cost, latency, or capability.",
+    title: "Name a model, or leave it",
+    body: "Send gpt-4-1 when you already know. Or set routing to balanced and let the policy choose.",
   },
   {
-    title: "Receive a normalized response",
-    body: "Read status, tokens, and output from one stable response format.",
+    title: "Read the same reply",
+    body: "Status, token count, and the output sit in the same fields, whether OpenAI or Anthropic answered.",
   },
 ] as const;
 
@@ -53,7 +53,7 @@ function RequestCard() {
       <div className="mt-4">
         <FieldLabel>Message</FieldLabel>
         <div className="mt-1.5 rounded-[8px] border border-border px-3 py-2 text-[13px] text-muted">
-          Summarize the deployment notes.
+          Summarize the deploy notes.
         </div>
       </div>
       <div className="mt-5 flex items-center justify-end gap-2">
@@ -70,7 +70,7 @@ function CodeCard() {
     <div className={`w-[min(100%,440px)] overflow-hidden rounded-[20px] bg-[#17191e] p-5 ${panelShadow}`}>
       <div className="overflow-x-auto text-[#e7e9ee]">
         <p className={line}>
-          <span className="text-[#8b7cff]">curl</span> https://api.example.com/v1/chat \
+          <span className="text-[#8b7cff]">curl</span> https://api.aimodel.com/v1/chat \
         </p>
         <p className={line}>
           {"  "}
@@ -109,12 +109,12 @@ function CodeCard() {
 }
 
 const thread = [
-  { title: "Gateway", body: "Response ready from the selected model.", accent: true },
-  { title: "You", body: "Summarize the deployment notes." },
-  { title: "Claude Sonnet 4", body: "Three changes: routing, fallback, and one request format." },
-  { title: "GPT-4.1 mini", body: "Standing by as the faster fallback." },
-  { title: "Usage", body: "816 tokens · 412ms · status 200" },
-  { title: "DeepSeek", body: "Available if the primary route times out." },
+  { title: "Gateway", body: "200 from Claude Sonnet 4.", accent: true },
+  { title: "You", body: "Summarize the deploy notes." },
+  { title: "Claude Sonnet 4", body: "Route changed. Fallback is set. The body stayed." },
+  { title: "GPT-4.1 mini", body: "Next in line if Sonnet times out." },
+  { title: "Usage", body: "816 tokens · 412 ms · 200" },
+  { title: "DeepSeek", body: "On the list. Not used for this call." },
 ];
 
 function PhoneCard() {
@@ -164,10 +164,10 @@ export function HowItWorks() {
     <section className="bg-surface">
       <div className="home-frame border-t border-border lg:grid lg:grid-cols-2">
         <div className="flex h-full flex-col">
-          <Reveal className="px-6 pt-12 md:px-10 lg:px-12 lg:pt-14">
-            <h2 className="text-[2rem] leading-[1.15] font-medium tracking-[-0.03em]">How it works.</h2>
+          <Reveal className="px-6 pt-8 md:px-10 lg:px-12 lg:pt-10">
+            <h2 className="text-[2rem] leading-[1.15] font-medium tracking-[-0.03em]">How a call moves.</h2>
             <p className="mt-5 max-w-md text-[15px] leading-7 text-muted">
-              Connect once, choose any supported model, and receive a consistent response regardless of provider.
+              You post once. Name the model, or leave it on auto. The reply uses the same fields either way.
             </p>
           </Reveal>
           <div className="mt-10 lg:mt-auto lg:pt-10">

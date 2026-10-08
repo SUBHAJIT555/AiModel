@@ -179,7 +179,7 @@ export function ObservabilityPanel({
   ] as const;
 
   const screen = (
-    <div className={bare ? "w-[760px]" : "dashed-grid px-4 py-12 md:px-8 md:py-16"}>
+    <div className={bare ? "w-[760px]" : "dashed-grid px-4 py-8 md:px-8 md:py-10"}>
       <div
         className="relative mx-auto w-full max-w-[980px]"
         onMouseEnter={() => setPaused(true)}

@@ -29,24 +29,25 @@ export function ContactForm() {
 
   return (
     <section id="message" className="scroll-mt-28 bg-surface">
-      <div className="home-frame border-t border-border px-6 py-10 md:px-8 md:py-14">
+      <div className="home-frame border-t border-border px-6 py-8 md:px-8 md:py-10">
         <div className="grid items-end gap-10 lg:grid-cols-2 lg:gap-12">
           <div>
             <h2 className="text-[clamp(1.75rem,3vw,2.25rem)] leading-[1.12] font-medium tracking-[-0.03em]">
               Tell us about the route
             </h2>
             <p className="mt-3 text-[15px] leading-7 text-muted">
-              You can reach us anytime via{" "}
+              Or write{" "}
               <a
                 href={`mailto:${contactOffice.email}`}
                 className="font-medium text-primary underline decoration-primary/40 decoration-dotted underline-offset-4"
               >
                 {contactOffice.email}
               </a>
+              . This form does not send the message.
             </p>
             {sent ? (
               <p className="mt-8 max-w-md text-[16px] leading-7">
-                Noted on this page. This is a demonstration, so the message is not sent.
+                Noted on this page. The message is not sent.
               </p>
             ) : (
               <form action={submit} className="mt-8 space-y-5">
@@ -93,7 +94,7 @@ export function ContactForm() {
                     name="message"
                     required
                     rows={4}
-                    placeholder="Tell us what you want to route."
+                    placeholder="Which model, or which plan."
                     className={cn(fieldClass, "min-h-28 resize-y")}
                   />
                 </label>
@@ -115,7 +116,7 @@ export function ContactForm() {
                 </fieldset>
                 {error ? <p className="text-[14px] text-danger">{error}</p> : null}
                 <Button type="submit" className="h-11 w-full justify-center">
-                  Get started
+                  Leave a note
                 </Button>
               </form>
             )}

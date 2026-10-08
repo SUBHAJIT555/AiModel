@@ -19,10 +19,10 @@ type SectionProps = {
 };
 
 const spacingClass = {
-  compact: "py-14 md:py-16 lg:py-[72px]",
-  normal: "py-16 md:py-[88px] lg:py-[104px]",
-  large: "py-20 md:py-[120px] lg:py-36",
-  hero: "pt-4 pb-16 md:pt-6 md:pb-20 lg:pb-24",
+  compact: "py-10 md:py-12 lg:py-14",
+  normal: "py-12 md:py-14 lg:py-16",
+  large: "py-14 md:py-16 lg:py-20",
+  hero: "pt-4 pb-10 md:pt-6 md:pb-12 lg:pb-14",
   none: "",
 } as const;
 

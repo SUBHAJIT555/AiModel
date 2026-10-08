@@ -15,7 +15,7 @@ import { Reveal } from "@/components/motion/Reveal";
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "Unified API, intelligent model routing, automatic fallbacks, observability and controls for modern AI applications.",
+    "One request for the models in the catalog. A route, a fallback, and a record of which model answered.",
 };
 
 function requiredService(slug: string) {
@@ -45,7 +45,7 @@ export default function ServicesPage() {
       </ServiceSplit>
       <section id={observability.anchor} className="scroll-mt-28 bg-surface">
         <div className="home-frame border-t border-border">
-          <Reveal className="px-6 py-14 md:px-10 md:py-16">
+          <Reveal className="px-6 py-10 md:px-10 md:py-12">
             <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">
               {observability.index} / {observability.name}
             </p>
@@ -57,15 +57,14 @@ export default function ServicesPage() {
           <Reveal delay={0.08} className="border-t border-border">
             <ObservabilityPanel />
           </Reveal>
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border px-6 py-5 md:px-10">
-            <ul className="flex flex-wrap gap-x-5 gap-y-2">
-              {observability.features.map((feature) => (
-                <li key={feature} className="text-[13px] text-muted">
-                  {feature}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul className="flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-border px-6 py-5 md:px-10">
+            {observability.features.map((feature) => (
+              <li key={feature} className="flex items-center gap-2.5 text-[14px]">
+                <span aria-hidden className="size-1 shrink-0 rounded-full bg-primary" />
+                {feature}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
       <ServiceSplit service={enterprise}>

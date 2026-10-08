@@ -7,13 +7,13 @@ export function FaqSection() {
   return (
     <section id="faq" className="scroll-mt-28 bg-surface">
       <div className="home-frame border-t border-border lg:grid lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
-        <Reveal className="px-6 py-14 md:px-10 lg:px-12 lg:py-16">
+        <Reveal className="px-6 py-10 md:px-10 lg:px-12 lg:py-12">
           <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">Questions</p>
           <h2 className="mt-3 max-w-[11em] text-[clamp(1.75rem,3vw,2.5rem)] leading-[1.08] font-medium tracking-[-0.035em]">
-            Frequently asked questions.
+            Questions, plainly.
           </h2>
           <p className="mt-4 max-w-md text-[15px] leading-7 text-muted">
-            How the gateway, routing, pricing, and support work in this frontend.
+            The gateway, the route, and what happens when a model does not answer.
           </p>
           <img
             src="/figures/faq.svg"
@@ -23,7 +23,7 @@ export function FaqSection() {
             className="mt-10 hidden w-full max-w-[300px] lg:block"
           />
         </Reveal>
-        <Reveal delay={0.08} className="border-t border-border px-6 py-10 md:px-10 lg:border-t-0 lg:px-12 lg:py-16">
+        <Reveal delay={0.08} className="border-t border-border px-6 py-8 md:px-10 lg:border-t-0 lg:px-12 lg:py-12">
           <div className="flex flex-col gap-8">
             {faqCategories.map((category) => (
               <div key={category.title}>

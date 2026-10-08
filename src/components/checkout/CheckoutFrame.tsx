@@ -14,7 +14,7 @@ export function CheckoutFrame({
   return (
     <section className="bg-surface -mt-[5.5rem] pt-[5.5rem] pb-16 md:-mt-[7.5rem] md:pt-[7.5rem]">
       <div className="home-frame">
-        <div className="px-6 pt-12 pb-8 md:px-10 md:pt-16">
+        <div className="px-6 pt-8 pb-6 md:px-10 md:pt-10">
           <p className="inline-flex items-center gap-2 text-[14px] font-medium text-primary">
             <span aria-hidden className="size-3.5 rounded-[4px] bg-primary" />
             {eyebrow}

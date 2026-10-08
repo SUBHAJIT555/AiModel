@@ -10,18 +10,18 @@ export function AboutStats({
   modalities: number;
 }) {
   const tiles = [
-    { value: String(models), label: "Models", note: "Demo catalog", accent: true },
-    { value: String(providers), label: "Providers", note: "Behind the models", accent: false },
-    { value: String(plans), label: "Paid plans", note: "Listed in rupees", accent: false },
-    { value: String(modalities), label: "Modalities", note: "In the catalog", accent: false },
+    { value: String(models), label: "Models", note: "In the catalog", accent: true },
+    { value: String(providers), label: "Providers", note: "Behind those models", accent: false },
+    { value: String(plans), label: "Plans", note: "Listed in rupees", accent: false },
+    { value: String(modalities), label: "Call types", note: "Text through embeddings", accent: false },
   ];
 
   return (
     <section id="stats" className="scroll-mt-28 bg-surface">
       <div className="home-frame border-t border-border">
         <div className="flex flex-wrap items-baseline justify-between gap-3 px-6 py-5 md:px-8">
-          <h2 className="text-[18px] font-medium tracking-[-0.02em]">Counted from this catalog.</h2>
-          <p className="text-[13px] text-muted">The demonstration you can open on this site.</p>
+          <h2 className="text-[18px] font-medium tracking-[-0.02em]">Counted from the catalog.</h2>
+          <p className="text-[13px] text-muted">What this site lists today.</p>
         </div>
         <div className="grid grid-cols-2 border-t border-border md:grid-cols-4">
           {tiles.map((tile) => (

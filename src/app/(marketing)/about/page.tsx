@@ -12,7 +12,7 @@ import { pricingPlans } from "@/data/pricing";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Aimodel is a model gateway: one catalog, rupee pricing, and a request that stays the same when the provider changes.",
+    "Aimodel sits between the app and the models. One request, a catalog you can read, and another model if the first one does not answer.",
 };
 
 export default function AboutPage() {

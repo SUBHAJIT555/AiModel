@@ -1,13 +1,13 @@
 export const heroContent = {
-  eyebrow: "AI model infrastructure",
-  titleLead: "Run every model",
-  titleTail: "through",
+  eyebrow: "Priced in rupees",
+  titleLead: "Call any model",
+  titleTail: "from",
   titleAccent: "one API",
   description:
-    "Connect to text, reasoning, vision, image, audio and video models through one consistent API — without rebuilding your integration for every provider.",
-  primaryCta: { label: "Start building", href: "/pricing" },
-  secondaryCta: { label: "Explore models", href: "/models" },
-  stripLabel: "Models available through one gateway",
+    "OpenAI, Anthropic, Google, and the rest of the catalog. Text, image, audio, and video. Change the model name. The request stays the same.",
+  primaryCta: { label: "See plans", href: "/pricing" },
+  secondaryCta: { label: "Browse models", href: "/models" },
+  stripLabel: "Providers on this gateway",
 } as const;
 
 export type HeroRoute = {

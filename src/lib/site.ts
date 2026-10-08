@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Aimodel",
   description:
-    "One API for hundreds of AI models. Route requests, compare capabilities, and fall back across providers through a single gateway.",
+    "One URL for the models in the catalog. Prices in rupees, and another model if the first provider does not answer.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com",
   docsUrl: "https://docs.example.com",
   ctaHref: "/pricing",
