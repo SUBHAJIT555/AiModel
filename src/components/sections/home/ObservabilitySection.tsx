@@ -7,7 +7,7 @@ const stats = [
   ["Requests", "12,480"],
   ["Success rate", "99.2%"],
   ["Median latency", "214ms"],
-  ["Spend", "$186"],
+  ["Spend", "₹15,624"],
 ];
 
 const providers = [

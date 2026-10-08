@@ -58,20 +58,20 @@ export const megaMenus: Record<MegaMenuKey, MegaMenuConfig> = {
     leftTop: {
       title: "Smart Routing",
       description: "Choose a model for cost, latency, quality, or availability.",
-      href: "/services/smart-routing",
+      href: "/services#smart-routing",
       figure: "routing",
     },
     leftBottom: {
-      title: "Automatic Fallbacks",
-      description: "Move a request to the next healthy model when one fails.",
-      href: "/services/fallbacks",
-      figure: "fallback",
-    },
-    main: {
       title: "Observability",
       description: "See latency, cost, and errors for every routed request.",
-      href: "/services/observability",
+      href: "/services#observability",
       figure: "observability",
+    },
+    main: {
+      title: "Automatic Fallbacks",
+      description: "Move a request to the next healthy model when one fails.",
+      href: "/services#fallbacks",
+      figure: "fallback",
     },
     footer: {
       title: "Platform services",

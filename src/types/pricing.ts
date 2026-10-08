@@ -4,6 +4,10 @@ export type PricingPlan = {
   description: string;
   monthlyBase?: number;
   annualBase?: number;
+  /** Token volume sets the price instead of a fixed fee. */
+  variable?: boolean;
+  /** Rupees charged for each million tokens on the variable plan. */
+  ratePerMillion?: number;
   popular?: boolean;
   features: string[];
   cta: string;

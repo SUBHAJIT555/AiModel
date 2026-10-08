@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getPlan } from "@/data/pricing";
-import { formatPlanPrice, planAmount } from "@/components/pricing/formatPlanPrice";
+import { formatPlanPrice, modelRate, quotedAmount } from "@/components/pricing/formatPlanPrice";
+import { formatInr } from "@/lib/inr";
 import { Button } from "@/components/ui/Button";
 import { readCheckout, saveCheckout } from "@/lib/demo-checkout";
 
@@ -14,6 +15,10 @@ export function PaymentStep() {
   const router = useRouter();
   const billing = params.get("billing") === "annual" ? "annual" : "monthly";
   const plan = getPlan(params.get("plan"));
+  const tokens = Number(params.get("tokens")) || 0;
+  const modelSlug = params.get("model");
+  const amount = quotedAmount(plan, billing, tokens, modelSlug);
+  const priced = Boolean(modelRate(modelSlug)) || plan.variable;
   const [method, setMethod] = useState(methods[0]);
   const [pending, setPending] = useState(false);
 
@@ -71,11 +76,11 @@ export function PaymentStep() {
       </div>
       <aside className="h-fit border border-border bg-surface p-5">
         <p className="font-mono text-[11px] tracking-[0.08em] text-muted uppercase">Due today</p>
-        <p className="mt-3 text-lg font-medium">{formatPlanPrice(plan, billing)}</p>
+        <p className="mt-3 text-lg font-medium">{priced ? formatInr(amount) : formatPlanPrice(plan, billing, tokens)}</p>
         <p className="mt-2 text-[13px] text-muted">
           {plan.name} · {billing} · {method}
         </p>
-        <p className="mt-4 font-mono text-[13px]">Total ${planAmount(plan, billing).toFixed(2)}</p>
+        <p className="mt-4 font-mono text-[13px]">Total {formatInr(amount)}</p>
       </aside>
     </div>
   );

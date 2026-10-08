@@ -11,6 +11,8 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@heroui/react": "^3.2.6",
+    "@heroui/styles": "^3.2.6",
     "@lucasmarkes/hairline": "^0.3.0",
     "@tabler/icons-react": "^3.49.0",
     "lucide-react": "^1.52.0",

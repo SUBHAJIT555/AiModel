@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { ArrowRight } from "lucide-react";
 import { models } from "@/data/models";
 import { ModelDirectory } from "@/components/models/ModelDirectory";
+import { HeroBackdrop } from "@/components/sections/HeroBackdrop";
 import { Button } from "@/components/ui/Button";
 
 export const metadata: Metadata = {
@@ -14,7 +15,9 @@ export default function ModelsPage() {
   return (
     <section className="bg-surface -mt-[5.5rem] pt-[5.5rem] pb-16 md:-mt-[7.5rem] md:pt-[7.5rem]">
       <div className="home-frame">
-        <div className="mx-auto flex max-w-[760px] flex-col items-center px-6 pt-14 pb-12 text-center md:pt-20 md:pb-16">
+        <div className="relative">
+          <HeroBackdrop src="/heroes/models.jpg" />
+          <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center px-6 pt-14 pb-12 text-center md:pt-20 md:pb-16">
           <p className="inline-flex items-center gap-2 text-[14px] font-medium text-primary">
             <span aria-hidden className="size-3.5 rounded-[4px] bg-primary" />
             Catalog
@@ -36,6 +39,7 @@ export default function ModelsPage() {
             <Button href="/pricing" variant="secondary">
               View pricing
             </Button>
+          </div>
           </div>
         </div>
         <Suspense>

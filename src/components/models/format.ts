@@ -1,4 +1,5 @@
 import type { Model } from "@/types/model";
+import { formatInr, usdToInr } from "@/lib/inr";
 
 export function formatContext(value?: number) {
   if (!value) return "—";
@@ -11,11 +12,11 @@ export function formatContext(value?: number) {
 }
 
 export function formatPrice(model: Model) {
-  if (model.unitPrice) return `$${model.unitPrice.amount} / ${model.unitPrice.unit}`;
+  if (model.unitPrice) return `${formatInr(usdToInr(model.unitPrice.amount))} / ${model.unitPrice.unit}`;
   if (model.inputPricePerMillion != null && model.outputPricePerMillion != null) {
-    return `$${model.inputPricePerMillion} / $${model.outputPricePerMillion} per 1M`;
+    return `${formatInr(usdToInr(model.inputPricePerMillion))} / ${formatInr(usdToInr(model.outputPricePerMillion))} per 1M`;
   }
-  if (model.inputPricePerMillion != null) return `$${model.inputPricePerMillion} / 1M`;
+  if (model.inputPricePerMillion != null) return `${formatInr(usdToInr(model.inputPricePerMillion))} / 1M`;
   return "Usage";
 }
 

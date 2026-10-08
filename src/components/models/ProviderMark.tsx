@@ -32,6 +32,10 @@ const brandIcons: Record<string, string> = {
   zhipu: "/brands/zhipu.svg",
 };
 
+export function brandIcon(slug: string) {
+  return brandIcons[slug];
+}
+
 export function ProviderMark({
   slug,
   name,

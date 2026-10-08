@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getModel } from "@/data/models";
 import { getPlan } from "@/data/pricing";
-import { formatPlanPrice, planAmount } from "@/components/pricing/formatPlanPrice";
+import { formatPlanPrice, modelRate, quotedAmount } from "@/components/pricing/formatPlanPrice";
+import { formatInr, formatMillions } from "@/lib/inr";
 import { Button } from "@/components/ui/Button";
 import { saveCheckout } from "@/lib/demo-checkout";
 
@@ -17,7 +18,16 @@ export function CheckoutForm() {
   const billing = params.get("billing") === "annual" ? "annual" : "monthly";
   const plan = getPlan(params.get("plan"));
   const model = getModel(params.get("model") ?? "");
-  const amount = planAmount(plan, billing);
+  const tokens = Number(params.get("tokens")) || 0;
+  const unit = params.get("unit");
+  const rate = modelRate(model?.slug ?? null);
+  const amount = quotedAmount(plan, billing, tokens, model?.slug ?? null);
+  const volume =
+    tokens > 0 && (plan.variable || rate)
+      ? unit === "million" || (!unit && plan.variable)
+        ? `${formatMillions(tokens)} tokens`
+        : `${tokens} ${unit ?? "units"}`
+      : null;
   const [error, setError] = useState("");
 
   function submit(formData: FormData) {
@@ -38,6 +48,8 @@ export function CheckoutForm() {
     });
     const query = new URLSearchParams({ plan: plan.id, billing });
     if (model) query.set("model", model.slug);
+    if (tokens) query.set("tokens", String(tokens));
+    if (unit) query.set("unit", unit);
     router.push(`/checkout/payment?${query.toString()}`);
   }
 
@@ -75,18 +87,19 @@ export function CheckoutForm() {
         <h2 className="mt-3 text-lg font-medium">{plan.name}</h2>
         <p className="mt-1 text-[13px] text-muted capitalize">{billing}</p>
         {model ? <p className="mt-3 text-[13px]">Model · {model.displayName}</p> : null}
+        {volume ? <p className="mt-1 text-[13px] text-muted">{volume}</p> : null}
         <dl className="mt-5 space-y-2 border-t border-border pt-4 text-[13px]">
           <div className="flex justify-between">
             <dt className="text-muted">Subtotal</dt>
-            <dd>{formatPlanPrice(plan, billing)}</dd>
+            <dd>{volume ? formatInr(amount) : formatPlanPrice(plan, billing, tokens)}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-muted">Tax</dt>
-            <dd>$0.00</dd>
+            <dd>{formatInr(0)}</dd>
           </div>
           <div className="flex justify-between font-medium">
             <dt>Total</dt>
-            <dd>{amount === 0 ? "$0.00" : `$${amount}`}</dd>
+            <dd>{formatInr(amount)}</dd>
           </div>
         </dl>
       </aside>

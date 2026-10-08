@@ -29,7 +29,7 @@ export const heroRoutes: HeroRoute[] = [
     provider: "OpenAI",
     latency: "128ms",
     tokens: "214",
-    cost: "$0.0004",
+    cost: "₹0.03",
     status: "200",
   },
   {
@@ -39,7 +39,7 @@ export const heroRoutes: HeroRoute[] = [
     provider: "Anthropic",
     latency: "384ms",
     tokens: "812",
-    cost: "$0.0021",
+    cost: "₹0.18",
     status: "200",
   },
   {
@@ -49,7 +49,7 @@ export const heroRoutes: HeroRoute[] = [
     provider: "DeepSeek",
     latency: "920ms",
     tokens: "1,460",
-    cost: "$0.0088",
+    cost: "₹0.74",
     status: "200",
   },
   {
@@ -59,7 +59,7 @@ export const heroRoutes: HeroRoute[] = [
     provider: "OpenAI",
     latency: "510ms",
     tokens: "640",
-    cost: "$0.0034",
+    cost: "₹0.29",
     status: "200",
   },
 ];

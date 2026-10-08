@@ -2,7 +2,14 @@ import Link from "next/link";
 import type { MegaMenuFeature } from "@/types/mega-menu";
 import { MegaFigure } from "@/components/figures/MegaFigure";
 import { ProviderMark } from "@/components/models/ProviderMark";
+import { ServiceMenuScene } from "@/components/navigation/ServiceMenuScene";
 import { cn } from "@/lib/cn";
+
+const serviceScenes = {
+  routing: "routing",
+  fallback: "fallback",
+  observability: "observability",
+} as const;
 
 type MegaMenuFeatureProps = {
   feature: MegaMenuFeature;
@@ -36,6 +43,8 @@ export function MegaMenuFeature({
               </span>
             ))}
           </span>
+        ) : feature.figure in serviceScenes ? (
+          <ServiceMenuScene kind={serviceScenes[feature.figure as keyof typeof serviceScenes]} />
         ) : (
           <MegaFigure figure={feature.figure} large={large} />
         )}

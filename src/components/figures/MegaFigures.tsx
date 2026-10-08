@@ -103,60 +103,53 @@ export function ModelCatalogFigure({ large }: FigureProps) {
 
 export function RoutingFigure({ large }: FigureProps) {
   return (
-    <Frame large={large} viewBox="0 0 320 120">
-      <text x="28" y="36">
-        101100010
-      </text>
-      <text x="28" y="68">
-        010011010
-      </text>
-      <text x="28" y="100">
-        110100101
-      </text>
-      <path d="M214 22v84" />
-      <text className="mega-strong" x="230" y="36">
-        010
-      </text>
-      <text className="mega-strong" x="230" y="68">
-        101
-      </text>
-      <text className="mega-strong" x="230" y="100">
-        001
-      </text>
+    <Frame large={large} viewBox="0 0 320 128">
+      <rect height="28" rx="8" width="116" x="176" y="14" />
+      <rect className="mega-accent" height="28" rx="8" width="116" x="176" y="50" />
+      <rect height="28" rx="8" width="116" x="176" y="86" />
+      <path d="M192 28h24" />
+      <path d="M192 100h24" />
+      <circle className="mega-live" cx="192" cy="64" r="3.5" />
+      <rect height="32" rx="8" width="48" x="18" y="48" />
+      <path d="M30 64h24" />
+      <path d="M66 64h18" />
+      <path d="M84 64C118 64 126 28 172 28" />
+      <path d="M84 64h88" />
+      <path d="M84 64C118 64 126 100 172 100" />
     </Frame>
   );
 }
 
 export function FallbackFigure({ large }: FigureProps) {
   return (
-    <Frame large={large} viewBox="0 0 320 140">
-      <path d="M28 18v104" />
-      <path d="M28 122h268" />
-      <path d="M96 18v104" strokeDasharray="2 4" />
-      <path d="M164 18v104" strokeDasharray="2 4" />
-      <path d="M232 18v104" strokeDasharray="2 4" />
-      <path d="M28 108c28-6 42 4 68-16 22-18 36-42 62-30 20 8 32 4 54-20 16-18 34-14 58 8" />
+    <Frame large={large} viewBox="0 0 320 128">
+      <path d="M32 18v86" />
+      <path d="M32 104h256" />
+      <path d="M104 18v86" strokeDasharray="2 4" />
+      <path d="M176 18v86" strokeDasharray="2 4" />
+      <path d="M248 18v86" strokeDasharray="2 4" />
       <path
-        d="M28 100c32 6 48-8 74-4 26 4 40 16 66 6 22-8 38 0 54 10 14 8 26 6 46-2"
-        opacity="0.55"
+        d="M32 80C80 78 120 88 160 62C200 36 228 40 248 46C272 54 292 50 300 56"
+        opacity="0.45"
       />
-      <circle className="mega-accent" cx="232" cy="46" r="3.5" />
+      <path d="M32 90C80 92 130 78 180 86C220 92 260 84 300 78" />
+      <circle className="mega-accent" cx="248" cy="46" r="4" />
     </Frame>
   );
 }
 
 export function ObservabilityFigure({ large }: FigureProps) {
   return (
-    <Frame large={large} tint viewBox="0 0 360 300">
-      <path d="M40 150h280" strokeDasharray="3 6" />
-      <path d="M180 24v252" strokeDasharray="3 6" />
-      <circle cx="180" cy="150" r="112" />
-      <circle cx="180" cy="150" r="72" />
-      <path d="M112 168c18-28 34-18 52-40 16-20 28-8 44 6 14 12 26 4 40-16 12-16 22-8 36 10" />
-      <path d="M108 156c22 10 36-6 54 2 16 8 28 22 46 14 16-8 28-2 42 12" />
-      <circle className="mega-accent" cx="250" cy="112" r="7" />
-      <circle cx="118" cy="186" r="10" />
-      <circle className="mega-accent" cx="214" cy="188" r="5" />
+    <Frame large={large} tint viewBox="0 0 220 336">
+      <path d="M16 168h188" strokeDasharray="3 6" />
+      <path d="M110 22v292" strokeDasharray="3 6" />
+      <circle cx="110" cy="168" r="98" />
+      <circle cx="110" cy="168" r="62" />
+      <path d="M42 188c20-32 34-18 54-42 16-18 28-6 44 8 14 12 24 4 40-18" />
+      <path d="M40 174c22 12 36-8 56 2 18 10 28 22 46 14 16-8 26 0 38 14" />
+      <circle className="mega-accent" cx="172" cy="108" r="6.5" />
+      <circle cx="56" cy="206" r="9" />
+      <circle className="mega-accent" cx="140" cy="198" r="5" />
     </Frame>
   );
 }

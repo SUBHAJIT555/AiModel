@@ -20,8 +20,8 @@ export const footerColumns: FooterColumn[] = [
   {
     title: "Product",
     links: [
-      { label: "Unified API", href: "/services/unified-api" },
-      { label: "Smart Routing", href: "/services/smart-routing" },
+      { label: "Unified API", href: "/services#unified-api" },
+      { label: "Smart Routing", href: "/services#smart-routing" },
       { label: "Pricing", href: "/pricing" },
       { label: "Checkout", href: "/checkout" },
     ],
@@ -36,8 +36,8 @@ export const footerColumns: FooterColumn[] = [
   {
     title: "Platform",
     links: [
-      { label: "Observability", href: "/services/observability" },
-      { label: "Fallbacks", href: "/services/fallbacks" },
+      { label: "Observability", href: "/services#observability" },
+      { label: "Fallbacks", href: "/services#fallbacks" },
       { label: "Contact", href: "/contact" },
     ],
   },

@@ -5,9 +5,9 @@ import { useState } from "react";
 const policies = ["Balanced", "Cost", "Latency", "Quality"] as const;
 
 const candidates = [
-  { name: "Claude Sonnet 4", cost: "$$", latency: "420ms", quality: "High" },
-  { name: "GPT-4.1 mini", cost: "$", latency: "180ms", quality: "Medium" },
-  { name: "Gemini 2.5 Flash", cost: "$", latency: "160ms", quality: "Medium" },
+  { name: "Claude Sonnet 4", cost: "₹₹", latency: "420ms", quality: "High" },
+  { name: "GPT-4.1 mini", cost: "₹", latency: "180ms", quality: "Medium" },
+  { name: "Gemini 2.5 Flash", cost: "₹", latency: "160ms", quality: "Medium" },
 ];
 
 const pick = {
