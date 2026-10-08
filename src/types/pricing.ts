@@ -9,6 +9,7 @@ export type PricingPlan = {
   /** Rupees charged for each million tokens on the variable plan. */
   ratePerMillion?: number;
   popular?: boolean;
+  featured?: boolean;
   features: string[];
   cta: string;
 };

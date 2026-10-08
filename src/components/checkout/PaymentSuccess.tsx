@@ -11,21 +11,15 @@ export function PaymentSuccess() {
   const order = params.get("order") ?? "ORD-AI-28491";
 
   return (
-    <div className="max-w-xl border border-border bg-surface p-6">
-      <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">Payment successful</p>
-      <h1 className="mt-3 text-3xl font-medium tracking-[-0.03em]">Plan activated</h1>
-      <p className="mt-3 text-sm leading-6 text-muted">
-        {plan.name} is marked active for this demo session. No charge was sent to a payment provider.
-      </p>
-      <p className="mt-5 font-mono text-[13px]">Order {order}</p>
+    <div className="max-w-xl rounded-[22px] border border-border bg-surface p-6 md:p-8">
+      <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">Order {order}</p>
+      <h2 className="mt-4 text-[22px] font-medium tracking-[-0.03em]">{plan.name} is active for this session.</h2>
       <div className="mt-6 flex flex-wrap gap-3">
-        <Button href="/" size="sm">
-          Go to dashboard
-        </Button>
-        <Button href="/models" size="sm" variant="secondary">
+        <Button href="/">Go to dashboard</Button>
+        <Button href="/models" variant="secondary">
           View models
         </Button>
-        <Button href={siteConfig.docsUrl} size="sm" variant="ghost">
+        <Button href={siteConfig.docsUrl} variant="ghost">
           View documentation
         </Button>
       </div>

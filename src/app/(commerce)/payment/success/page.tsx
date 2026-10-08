@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { CheckoutFrame } from "@/components/checkout/CheckoutFrame";
 import { PaymentSuccess } from "@/components/checkout/PaymentSuccess";
-import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
 
 export const metadata: Metadata = {
   title: "Payment successful",
@@ -11,12 +10,14 @@ export const metadata: Metadata = {
 
 export default function PaymentSuccessPage() {
   return (
-    <Section>
-      <Container>
-        <Suspense fallback={null}>
-          <PaymentSuccess />
-        </Suspense>
-      </Container>
-    </Section>
+    <CheckoutFrame
+      eyebrow="Payment successful"
+      title="Plan activated."
+      lede="The demo marked this plan active. No charge was sent to a payment provider."
+    >
+      <Suspense fallback={null}>
+        <PaymentSuccess />
+      </Suspense>
+    </CheckoutFrame>
   );
 }

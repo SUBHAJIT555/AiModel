@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
-import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
+import { CheckoutFrame } from "@/components/checkout/CheckoutFrame";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -12,16 +11,14 @@ export const metadata: Metadata = {
 
 export default function CheckoutPage() {
   return (
-    <Section>
-      <Container>
-        <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">Checkout</p>
-        <h1 className="mt-3 text-3xl font-medium tracking-[-0.03em]">Review the demo order</h1>
-        <div className="mt-8">
-          <Suspense fallback={null}>
-            <CheckoutForm />
-          </Suspense>
-        </div>
-      </Container>
-    </Section>
+    <CheckoutFrame
+      eyebrow="Checkout"
+      title="Review the order."
+      lede="Confirm the plan and your details. This demo does not collect a payment."
+    >
+      <Suspense fallback={null}>
+        <CheckoutForm />
+      </Suspense>
+    </CheckoutFrame>
   );
 }

@@ -18,5 +18,10 @@ export function formatInr(amount: number) {
 }
 
 export function formatMillions(value: number) {
+  if (value >= 1000) {
+    const billions = value / 1000;
+    const text = Number.isInteger(billions) ? String(billions) : billions.toFixed(1);
+    return `${text}B`;
+  }
   return `${value}M`;
 }

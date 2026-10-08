@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { CheckoutFrame } from "@/components/checkout/CheckoutFrame";
 import { PaymentStep } from "@/components/checkout/PaymentStep";
-import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
 
 export const metadata: Metadata = {
   title: "Payment",
@@ -12,16 +11,14 @@ export const metadata: Metadata = {
 
 export default function CheckoutPaymentPage() {
   return (
-    <Section>
-      <Container>
-        <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">Payment</p>
-        <h1 className="mt-3 text-3xl font-medium tracking-[-0.03em]">Choose a method</h1>
-        <div className="mt-8">
-          <Suspense fallback={null}>
-            <PaymentStep />
-          </Suspense>
-        </div>
-      </Container>
-    </Section>
+    <CheckoutFrame
+      eyebrow="Payment"
+      title="Choose a method."
+      lede="Pick a method to finish the demo. No card number is collected and nothing is charged."
+    >
+      <Suspense fallback={null}>
+        <PaymentStep />
+      </Suspense>
+    </CheckoutFrame>
   );
 }
