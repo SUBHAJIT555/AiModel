@@ -1,0 +1,1310 @@
+<?php
+declare(strict_types=1);
+
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+error_reporting(E_ALL);
+header('Content-Type: application/json; charset=utf-8');
+
+register_shutdown_function(function () {
+    $error = error_get_last();
+    if (!$error) {
+        return;
+    }
+    $fatalTypes = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR);
+    if (!in_array($error['type'], $fatalTypes, true)) {
+        return;
+    }
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code(500);
+    }
+    echo json_encode(array(
+        'success' => false,
+        'error' => 'Server error while processing payment.',
+    ));
+});
+
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+$allowed = array(
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+);
+if ($origin && in_array($origin, $allowed, true)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Vary: Origin');
+}
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Max-Age: 86400');
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
+date_default_timezone_set('Asia/Kolkata');
+
+if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(array('success' => false, 'error' => 'Only POST allowed.'));
+    exit;
+}
+
+loadEnvFiles();
+require_once __DIR__ . '/mailer.php';
+
+$inputData = array();
+$rawInput = file_get_contents('php://input');
+$contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
+if (stripos($contentType, 'application/json') !== false && is_string($rawInput) && $rawInput !== '') {
+    $decoded = json_decode($rawInput, true);
+    if (is_array($decoded)) {
+        $inputData = $decoded;
+    }
+} else {
+    $inputData = $_POST;
+}
+
+if (!function_exists('openssl_encrypt')) {
+    fail(500, 'PHP OpenSSL is required for payment encryption. Use C:/xampp/php/php.exe (yarn php:api).');
+}
+
+if (isGatewayWebhook($inputData)) {
+    handleGatewayWebhook();
+}
+
+$action = v('action', 'create_session');
+if ($action === 'create_session') {
+    startCheckoutPayment();
+} elseif ($action === 'status' || $action === 'confirm') {
+    confirmPaymentStatus();
+} elseif ($action === 'webhook') {
+    handleGatewayWebhook();
+} else {
+    http_response_code(400);
+    echo json_encode(array('success' => false, 'error' => 'Invalid action.'));
+}
+
+function loadEnvFiles()
+{
+    $candidates = array(
+        __DIR__ . DIRECTORY_SEPARATOR . '.env',
+        __DIR__ . DIRECTORY_SEPARATOR . 'mpurse.env',
+        dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env',
+        dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . '.env',
+        dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'mpurse.env',
+    );
+    foreach ($candidates as $path) {
+        if (!is_file($path) || !is_readable($path)) {
+            continue;
+        }
+        $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (!is_array($lines)) {
+            continue;
+        }
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
+                continue;
+            }
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            $value = trim($value, "\"'");
+            if ($key === '') {
+                continue;
+            }
+            if (!isset($_ENV[$key]) || $_ENV[$key] === '') {
+                $_ENV[$key] = $value;
+            }
+            if (getenv($key) === false || getenv($key) === '') {
+                putenv($key . '=' . $value);
+            }
+        }
+    }
+}
+
+function envVal($key, $default = '')
+{
+    if (isset($_ENV[$key]) && $_ENV[$key] !== '') {
+        return (string) $_ENV[$key];
+    }
+    $fromEnv = getenv($key);
+    if ($fromEnv !== false && $fromEnv !== '') {
+        return (string) $fromEnv;
+    }
+    return $default;
+}
+
+function v($key, $default = '')
+{
+    global $inputData;
+    if (!isset($inputData[$key])) {
+        return $default;
+    }
+    if (is_array($inputData[$key])) {
+        return $default;
+    }
+    $val = trim((string) $inputData[$key]);
+    return $val !== '' ? $val : $default;
+}
+
+function fail($code, $error, $extra = array())
+{
+    http_response_code($code);
+    echo json_encode(array_merge(array('success' => false, 'error' => $error), $extra));
+    exit;
+}
+
+function ok($payload)
+{
+    echo json_encode(array_merge(array('success' => true), $payload));
+    exit;
+}
+
+function clean($s)
+{
+    return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+}
+
+function dataDir()
+{
+    $dir = __DIR__ . DIRECTORY_SEPARATOR . 'data';
+    if (!is_dir($dir)) {
+        mkdir($dir, 0700, true);
+    }
+    return $dir;
+}
+
+function orderPath($orderId)
+{
+    return dataDir() . DIRECTORY_SEPARATOR . preg_replace('/[^A-Za-z0-9_-]/', '', $orderId) . '.json';
+}
+
+function saveOrder($order)
+{
+    $path = orderPath($order['order_id']);
+    $json = json_encode($order, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $ok = file_put_contents($path, $json, LOCK_EX);
+    if ($ok === false) {
+        fail(500, 'Unable to store order details.');
+    }
+}
+
+function loadOrder($orderId)
+{
+    $path = orderPath($orderId);
+    if (!is_file($path)) {
+        return null;
+    }
+    $raw = file_get_contents($path);
+    $data = json_decode((string) $raw, true);
+    return is_array($data) ? $data : null;
+}
+
+function pruneOldOrders()
+{
+    $dir = dataDir();
+    $files = glob($dir . DIRECTORY_SEPARATOR . '*.json');
+    if (!is_array($files)) {
+        return;
+    }
+    $cutoff = time() - (14 * 24 * 60 * 60);
+    foreach ($files as $file) {
+        if (is_file($file) && filemtime($file) < $cutoff) {
+            @unlink($file);
+        }
+    }
+}
+
+function aesEncrypt($plainText, $base64Key)
+{
+    $key = base64_decode($base64Key, true);
+    if ($key === false || strlen($key) !== 32) {
+        fail(500, 'Payment encryption is not configured correctly.');
+    }
+    $iv = random_bytes(16);
+    $cipher = openssl_encrypt($plainText, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+    if ($cipher === false) {
+        fail(500, 'Unable to encrypt payment request.');
+    }
+    return base64_encode($iv . $cipher);
+}
+
+function aesDecrypt($encrypted, $base64Key)
+{
+    $key = base64_decode($base64Key, true);
+    if ($key === false || strlen($key) !== 32) {
+        return '';
+    }
+    $raw = base64_decode($encrypted, true);
+    if ($raw === false || strlen($raw) < 17) {
+        return '';
+    }
+    $iv = substr($raw, 0, 16);
+    $cipher = substr($raw, 16);
+    $plain = openssl_decrypt($cipher, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+    return is_string($plain) ? trim($plain) : '';
+}
+
+function mpurseKeys()
+{
+    $passKey = envVal('MPURSE_PASS_KEY');
+    $clientId = envVal('MPURSE_CLIENT_ID');
+    $clientSecret = envVal('MPURSE_CLIENT_SECRET');
+    $aesKey = envVal('MPURSE_AES_KEY');
+    if ($passKey === '' || $clientId === '' || $clientSecret === '' || $aesKey === '') {
+        fail(500, 'Payment gateway is not configured.');
+    }
+    return array(
+        'pass_key' => $passKey,
+        'client_id' => $clientId,
+        'client_secret' => $clientSecret,
+        'aes_key' => $aesKey,
+        'mid' => envVal('MPURSE_MID'),
+    );
+}
+
+function headerSecrets($keys)
+{
+    $payload = json_encode(array(
+        'client_id' => $keys['client_id'],
+        'client_secret' => $keys['client_secret'],
+        'epoch' => sprintf('%.0f', microtime(true) * 1000),
+    ), JSON_UNESCAPED_SLASHES);
+    return aesEncrypt($payload, $keys['aes_key']);
+}
+
+function siteUrl()
+{
+    return rtrim(envVal('SITE_URL', 'http://localhost:3000'), '/');
+}
+
+function paymentMode()
+{
+    return 'web';
+}
+
+function firstHttpsUrl($value)
+{
+    if (is_string($value) && preg_match('#^https://#i', $value)) {
+        return $value;
+    }
+    if (!is_array($value)) {
+        return '';
+    }
+    foreach ($value as $item) {
+        $found = firstHttpsUrl($item);
+        if ($found !== '') {
+            return $found;
+        }
+    }
+    return '';
+}
+
+function withSessionId($url, $token)
+{
+    if ($url === '' || $token === '') {
+        return $url;
+    }
+    $parts = parse_url($url);
+    $query = array();
+    if (!empty($parts['query'])) {
+        parse_str($parts['query'], $query);
+    }
+    if (empty($query['id'])) {
+        $query['id'] = $token;
+    }
+    if (empty($query['session_token'])) {
+        $query['session_token'] = $token;
+    }
+    $host = isset($parts['host']) ? $parts['host'] : 'secure-sdk.mpurse.io';
+    $scheme = isset($parts['scheme']) ? $parts['scheme'] : 'https';
+    $path = isset($parts['path']) && $parts['path'] !== '' ? $parts['path'] : '/';
+    return $scheme . '://' . $host . $path . '?' . http_build_query($query);
+}
+
+function hostedCheckoutUrl($session)
+{
+    if (!is_array($session)) {
+        return '';
+    }
+
+    $token = gatewayText($session, array('session_token', 'sessionToken', 'id'));
+    $sources = array($session);
+    foreach (array('data', 'result', 'payload', 'sdk_payload') as $nested) {
+        if (isset($session[$nested]) && is_array($session[$nested])) {
+            $sources[] = $session[$nested];
+            if (isset($session[$nested]['payload']) && is_array($session[$nested]['payload'])) {
+                $sources[] = $session[$nested]['payload'];
+            }
+        }
+    }
+
+    $mode = paymentMode();
+    $url = '';
+    foreach ($sources as $source) {
+        $links = isset($source['payment_links']) ? $source['payment_links'] : null;
+        if (is_array($links)) {
+            foreach (array($mode, strtoupper($mode), 'web', 'WEB', 'desktop', 'Desktop') as $key) {
+                if (isset($links[$key])) {
+                    $found = firstHttpsUrl($links[$key]);
+                    if ($found !== '') {
+                        $url = $found;
+                        break 2;
+                    }
+                }
+            }
+            $found = firstHttpsUrl($links);
+            if ($found !== '') {
+                $url = $found;
+                break;
+            }
+        } elseif (is_string($links)) {
+            $found = firstHttpsUrl($links);
+            if ($found !== '') {
+                $url = $found;
+                break;
+            }
+        }
+
+        $direct = gatewayText($source, array('checkout_url', 'payment_url', 'redirect_url', 'paymentPageUrl'));
+        if ($direct !== '' && preg_match('#^https://#i', $direct)) {
+            $url = $direct;
+            break;
+        }
+    }
+
+    if ($url === '' && $token !== '') {
+        $host = rtrim(envVal('MPURSE_CHECKOUT_HOST', 'https://secure-sdk.mpurse.io'), '/');
+        $url = $host . '/?id=' . rawurlencode($token);
+    }
+
+    return withSessionId($url, $token);
+}
+
+function alphaName($value, $fallback)
+{
+    $clean = preg_replace('/[^A-Za-z]/', '', (string) $value);
+    return $clean !== '' ? substr($clean, 0, 64) : $fallback;
+}
+
+function normalizePhone($value)
+{
+    $digits = preg_replace('/\D+/', '', (string) $value);
+    if (strlen($digits) === 12 && strpos($digits, '91') === 0) {
+        $digits = substr($digits, 2);
+    }
+    if (strlen($digits) === 11 && strpos($digits, '0') === 0) {
+        $digits = substr($digits, 1);
+    }
+    return $digits;
+}
+
+function parseCart()
+{
+    global $inputData;
+    $cart = array();
+    if (isset($inputData['cart_items'])) {
+        if (is_array($inputData['cart_items'])) {
+            $cart = $inputData['cart_items'];
+        } else {
+            $decoded = json_decode((string) $inputData['cart_items'], true);
+            if (is_array($decoded)) {
+                $cart = $decoded;
+            }
+        }
+    }
+    $items = array();
+    $total = 0.0;
+    foreach ($cart as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $name = isset($row['name']) ? trim((string) $row['name']) : '';
+        $qty = isset($row['quantity']) ? (int) $row['quantity'] : 0;
+        $price = isset($row['price']) ? (float) $row['price'] : 0.0;
+        if ($name === '' || $qty < 1 || $qty > 99 || $price <= 0) {
+            fail(422, 'Cart items are invalid.');
+        }
+        $line = round($price * $qty, 2);
+        $total += $line;
+        $items[] = array(
+            'name' => substr($name, 0, 180),
+            'quantity' => $qty,
+            'price' => number_format($price, 2, '.', ''),
+        );
+    }
+    if (count($items) === 0) {
+        fail(422, 'Your cart is empty.');
+    }
+    $total = round($total, 2);
+    if ($total < 1 || $total > 500000) {
+        fail(422, 'Order amount is not valid.');
+    }
+    return array($items, $total);
+}
+
+function curlJson($method, $url, $headers = array(), $body = null)
+{
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        $opts = array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_CUSTOMREQUEST => $method,
+        );
+        if ($body !== null) {
+            $opts[CURLOPT_POSTFIELDS] = $body;
+        }
+        curl_setopt_array($ch, $opts);
+        $response = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+        if ($response === false) {
+            fail(502, 'Unable to reach the payment gateway.', array('message' => $curlError));
+        }
+        $decoded = json_decode((string) $response, true);
+        return array($httpCode, is_array($decoded) ? $decoded : array(), (string) $response);
+    }
+
+    $headerStr = implode("\r\n", $headers);
+    $context = stream_context_create(array(
+        'http' => array(
+            'method' => $method,
+            'header' => $headerStr,
+            'content' => $body !== null ? $body : '',
+            'timeout' => 30,
+            'ignore_errors' => true,
+        ),
+    ));
+    $response = @file_get_contents($url, false, $context);
+    $httpCode = 0;
+    if (isset($http_response_header) && is_array($http_response_header)) {
+        foreach ($http_response_header as $line) {
+            if (preg_match('/HTTP\/\S+\s+(\d+)/', $line, $m)) {
+                $httpCode = (int) $m[1];
+            }
+        }
+    }
+    if ($response === false) {
+        fail(502, 'Unable to reach the payment gateway.');
+    }
+    $decoded = json_decode((string) $response, true);
+    return array($httpCode, is_array($decoded) ? $decoded : array(), (string) $response);
+}
+
+function decodeGatewayBody($decoded, $aesKey)
+{
+    if (isset($decoded['ResponseData']) && is_string($decoded['ResponseData'])) {
+        $plain = aesDecrypt($decoded['ResponseData'], $aesKey);
+        $end = max(strrpos($plain, '}'), strrpos($plain, ']'));
+        if ($end !== false) {
+            $plain = substr($plain, 0, $end + 1);
+        }
+        $parsed = json_decode($plain, true);
+        if (is_array($parsed)) {
+            return $parsed;
+        }
+    }
+    return is_array($decoded) ? $decoded : array();
+}
+
+function collectCheckout()
+{
+    $firstName = v('billing_first_name', v('firstName'));
+    $lastName = v('billing_last_name', v('lastName'));
+    $email = v('billing_email', v('email'));
+    $phone = normalizePhone(v('billing_phone', v('phone')));
+    $address = v('billing_address', v('address'));
+    $town = v('billing_town', v('town'));
+    $state = v('billing_state', v('state'));
+    $postcode = v('billing_postcode', v('postcode'));
+    $notes = v('notes');
+
+    if ($firstName === '' || $lastName === '') {
+        fail(422, 'First name and last name are required.');
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        fail(422, 'Enter a valid email address.');
+    }
+    if (!preg_match('/^[6-9][0-9]{9}$/', $phone)) {
+        fail(422, 'Enter a valid 10-digit Indian mobile number.');
+    }
+    if ($address === '' || $town === '') {
+        fail(422, 'Street address and town are required.');
+    }
+
+    list($items, $total) = parseCart();
+    $amount = number_format($total, 2, '.', '');
+    $orderId = 'AIM' . strtoupper(bin2hex(random_bytes(8)));
+    $custName = trim(preg_replace('/[^A-Za-z ]/', '', $firstName . ' ' . $lastName));
+    if ($custName === '') {
+        $custName = 'Customer';
+    }
+
+    $names = array();
+    foreach ($items as $item) {
+        $names[] = $item['name'];
+    }
+    $description = substr(implode(', ', $names), 0, 255);
+    if ($description === '') {
+        $description = 'Aimodel order';
+    }
+
+    return array(
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'email' => $email,
+        'phone' => $phone,
+        'address' => $address,
+        'town' => $town,
+        'state' => $state,
+        'postcode' => $postcode,
+        'notes' => $notes,
+        'items' => $items,
+        'amount' => $amount,
+        'order_id' => $orderId,
+        'cust_name' => substr($custName, 0, 64),
+        'description' => $description,
+    );
+}
+
+function startCheckoutPayment()
+{
+    $method = strtolower(v('payment_method', 'upi'));
+    if ($method === 'card' || $method === 'netbanking') {
+        fail(422, 'Card and net banking are not available yet. Please pay with UPI.');
+    }
+    createUpiPayment();
+}
+
+function postEncrypted($url, $keys, $payload)
+{
+    list($httpCode, $decoded) = curlJson(
+        'POST',
+        $url,
+        array(
+            'Content-Type: application/json',
+            'pass_key: ' . $keys['pass_key'],
+            'header_secrets: ' . headerSecrets($keys),
+        ),
+        json_encode(
+            array('RequestData' => aesEncrypt(
+                json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                $keys['aes_key']
+            )),
+            JSON_UNESCAPED_SLASHES
+        )
+    );
+    return array($httpCode, decodeGatewayBody($decoded, $keys['aes_key']), $decoded);
+}
+
+function normalizeUpiId($value)
+{
+    return strtolower(trim((string) $value));
+}
+
+function isValidUpiId($value)
+{
+    return (bool) preg_match('/^[a-z0-9.\-_]{2,256}@[a-z]{2,64}$/', normalizeUpiId($value));
+}
+
+function createHostedSession($method)
+{
+    pruneOldOrders();
+    $checkout = collectCheckout();
+    $keys = mpurseKeys();
+    $payload = array(
+        'order_id' => $checkout['order_id'],
+        'amount' => $checkout['amount'],
+        'currency' => 'INR',
+        'action' => 'paymentPage',
+        'mode' => 'web',
+        'return_url' => siteUrl() . '/checkout/pay?order_id=' . rawurlencode($checkout['order_id']),
+        'customer_id' => $checkout['order_id'],
+        'customer_email' => substr($checkout['email'], 0, 128),
+        'customer_phone' => $checkout['phone'],
+        'first_name' => alphaName($checkout['first_name'], 'Customer'),
+        'last_name' => alphaName($checkout['last_name'], 'User'),
+        'description' => $checkout['description'],
+    );
+
+    $url = envVal(
+        'MPURSE_SESSION_URL',
+        'https://api-prod.mpurse.io/encrV2/mpurse/super-switch/v1/payments/session'
+    );
+    list($httpCode, $session, $decoded) = postEncrypted($url, $keys, $payload);
+    $checkoutUrl = hostedCheckoutUrl($session);
+
+    if ($checkoutUrl === '' || $httpCode >= 400) {
+        $message = 'Unable to start card / net banking payment. Please try UPI or try again.';
+        if (isset($session['message']) && is_string($session['message'])) {
+            $message = $session['message'];
+        } elseif (isset($decoded['message']) && is_string($decoded['message'])) {
+            $message = $decoded['message'];
+        }
+        fail(502, $message);
+    }
+
+    saveOrder(array(
+        'order_id' => $checkout['order_id'],
+        'amount' => $checkout['amount'],
+        'mid' => $keys['mid'],
+        'status' => isset($session['status']) ? (string) $session['status'] : 'NEW',
+        'session_token' => isset($session['session_token']) ? (string) $session['session_token'] : '',
+        'payment_method' => $method,
+        'emailed' => false,
+        'created_at' => date('c'),
+        'billing' => array(
+            'first_name' => $checkout['first_name'],
+            'last_name' => $checkout['last_name'],
+            'email' => $checkout['email'],
+            'phone' => $checkout['phone'],
+            'address' => $checkout['address'],
+            'town' => $checkout['town'],
+            'state' => $checkout['state'],
+            'postcode' => $checkout['postcode'],
+            'notes' => $checkout['notes'],
+        ),
+        'cart' => $checkout['items'],
+    ));
+
+    ok(array(
+        'order_id' => $checkout['order_id'],
+        'flow' => 'hosted',
+        'checkout_url' => $checkoutUrl,
+        'amount' => $checkout['amount'],
+    ));
+}
+
+function callUpiDirect($keys, $payload)
+{
+    $url = envVal(
+        'MPURSE_UPI_DIRECT_URL',
+        'https://api-prod.mpurse.io/encrV2/mpurse/super-switch/v1/payments/upi/direct'
+    );
+    list($httpCode, $result) = postEncrypted($url, $keys, $payload);
+    return array($httpCode, $result);
+}
+
+function isUpiStarted($httpCode, $result)
+{
+    if ($httpCode >= 400) {
+        return false;
+    }
+    $statusCode = gatewayText($result, array('statusCode', 'status_code'));
+    $status = strtoupper(gatewayText($result, array('status')));
+    $txnId = gatewayText($result, array('txn_id', 'txnId', 'transactionId', 'txnRef'));
+    $intent = gatewayText($result, array('intent_url', 'intentUrl', 'upi_intent', 'upiIntent'));
+    $qr = gatewayText($result, array('qr_Data', 'qr_data', 'qrData'));
+    $msg = strtolower(gatewayText($result, array('message', 'statusDescription', 'error')));
+    if (strpos($msg, 'required') !== false || strpos($msg, 'invalid') !== false || strpos($msg, 'connector error') !== false || strpos($msg, 'request failed') !== false) {
+        return false;
+    }
+    return $statusCode === '00'
+        || in_array($status, array('INITIATED', 'PENDING', 'SUCCESS'), true)
+        || $txnId !== ''
+        || $intent !== ''
+        || $qr !== '';
+}
+
+function preferredUpiMode()
+{
+    $mode = strtoupper(v('upi_mode', v('paymentMode')));
+    if (in_array($mode, array('QR', 'INTENT'), true)) {
+        return $mode;
+    }
+    $ua = isset($_SERVER['HTTP_USER_AGENT']) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
+    if (preg_match('/Android|iPhone|iPad|iPod|Mobile/i', $ua)) {
+        return 'INTENT';
+    }
+    return 'QR';
+}
+
+function upiDirectPayload($checkout, $paymentMode, $payeeVpa)
+{
+    $note = preg_replace('/\s+/', ' ', (string) $checkout['description']);
+    $note = trim((string) $note);
+    if ($note === '') {
+        $note = 'Aimodel order';
+    }
+
+    $payload = array(
+        'payeeName' => envVal('MPURSE_PAYEE_NAME', 'VIREXA ECOMMERCE HUB PVT LTD'),
+        'paymentMode' => $paymentMode,
+        'txnAmount' => $checkout['amount'],
+        'channelId' => envVal('MPURSE_CHANNEL_ID', 'WEBUSER'),
+        'txnNote' => substr($note, 0, 50),
+        'order_id' => $checkout['order_id'],
+        'merchantType' => envVal('MPURSE_MERCHANT_TYPE', 'AGGREGATE'),
+        'expiryTime' => envVal('MPURSE_EXPIRY_MINUTES', '10'),
+        'cust_name' => $checkout['cust_name'],
+        'cust_mobilenumber' => $checkout['phone'],
+        'currency' => 'INR',
+        'param_a' => envVal('MPURSE_PARAM_A', ''),
+        'param_b' => envVal('MPURSE_PARAM_B', ''),
+        'param_c' => envVal('MPURSE_PARAM_C', ''),
+    );
+    if (isValidUpiId($payeeVpa)) {
+        $payload['payeeVPA'] = $payeeVpa;
+    }
+    return $payload;
+}
+
+function createUpiPayment()
+{
+    pruneOldOrders();
+    $checkout = collectCheckout();
+    $keys = mpurseKeys();
+    $payeeVpa = normalizeUpiId(envVal('MPURSE_PAYEE_VPA'));
+    if ($payeeVpa !== '' && !isValidUpiId($payeeVpa)) {
+        fail(500, 'Merchant UPI ID is not configured.');
+    }
+
+    $preferred = preferredUpiMode();
+    $fallback = $preferred === 'QR' ? 'INTENT' : 'QR';
+    list($httpCode, $result) = callUpiDirect($keys, upiDirectPayload($checkout, $preferred, $payeeVpa));
+    $mode = $preferred;
+    if (!isUpiStarted($httpCode, $result)) {
+        $checkout['order_id'] = 'AIM' . strtoupper(bin2hex(random_bytes(8)));
+        list($httpCode, $result) = callUpiDirect($keys, upiDirectPayload($checkout, $fallback, $payeeVpa));
+        $mode = $fallback;
+        if (!isUpiStarted($httpCode, $result)) {
+            $message = gatewayText($result, array('statusDescription', 'message', 'error'));
+            fail(502, $message !== '' ? $message : 'Could not start UPI payment. Try again in a moment.');
+        }
+    }
+
+    $txnId = gatewayText($result, array('txn_id', 'txnId', 'transactionId', 'txnRef'));
+    $intent = gatewayText($result, array('intent_url', 'intentUrl', 'upi_intent', 'upiIntent'));
+    $qr = gatewayText($result, array('qr_Data', 'qr_data', 'qrData'));
+    $status = strtoupper(gatewayText($result, array('status')));
+
+    saveOrder(array(
+        'order_id' => $checkout['order_id'],
+        'amount' => $checkout['amount'],
+        'mid' => $keys['mid'],
+        'status' => $status !== '' ? $status : 'INITIATED',
+        'txn_id' => $txnId,
+        'qr_data' => $qr,
+        'intent_url' => $intent,
+        'payment_method' => 'upi',
+        'payment_mode' => $mode,
+        'payer_vpa' => '',
+        'emailed' => false,
+        'created_at' => date('c'),
+        'billing' => array(
+            'first_name' => $checkout['first_name'],
+            'last_name' => $checkout['last_name'],
+            'email' => $checkout['email'],
+            'phone' => $checkout['phone'],
+            'address' => $checkout['address'],
+            'town' => $checkout['town'],
+            'state' => $checkout['state'],
+            'postcode' => $checkout['postcode'],
+            'notes' => $checkout['notes'],
+        ),
+        'cart' => $checkout['items'],
+    ));
+
+    ok(array(
+        'order_id' => $checkout['order_id'],
+        'flow' => 'upi',
+        'pay_url' => '/checkout/pay?order_id=' . rawurlencode($checkout['order_id']),
+        'amount' => $checkout['amount'],
+        'qr_data' => $qr,
+        'intent_url' => $intent,
+        'payer_vpa' => '',
+        'payment_mode' => $mode,
+        'txn_id' => $txnId,
+    ));
+}
+
+function gatewayText($data, $keys)
+{
+    if (!is_array($data)) {
+        return '';
+    }
+    foreach ((array) $keys as $key) {
+        if (!array_key_exists($key, $data) || is_array($data[$key]) || is_object($data[$key]) || $data[$key] === null || $data[$key] === false) {
+            continue;
+        }
+        $value = trim((string) $data[$key]);
+        if ($value === '' || preg_match('/^(null|undefined|none|n\/a)$/i', $value)) {
+            continue;
+        }
+        return $value;
+    }
+    foreach (array('data', 'result', 'payload', 'payment') as $nested) {
+        if (isset($data[$nested]) && is_array($data[$nested])) {
+            $found = gatewayText($data[$nested], $keys);
+            if ($found !== '') {
+                return $found;
+            }
+        }
+    }
+    return '';
+}
+
+function isStatusLookupMiss($gateway)
+{
+    $msg = strtolower(gatewayText($gateway, array('message', 'statusDescription', 'error', 'status_description')));
+    if ($msg === '') {
+        return false;
+    }
+    return strpos($msg, 'not found') !== false
+        || strpos($msg, 'database error') !== false
+        || strpos($msg, 'no record') !== false
+        || strpos($msg, 'does not exist') !== false;
+}
+
+function normalizeStatus($status)
+{
+    $value = strtolower(trim((string) $status));
+    if (in_array($value, array(
+        'success',
+        'successful',
+        'paid',
+        'captured',
+        'completed',
+        'charged',
+        'authorized',
+        'txn_success',
+        '00',
+    ), true)) {
+        return 'success';
+    }
+    if (in_array($value, array('failed', 'failure', 'fail', 'cancelled', 'canceled', 'expired', 'declined'), true)) {
+        return 'failed';
+    }
+    return 'pending';
+}
+
+function decodeStatusPayload($decoded)
+{
+    if (!is_array($decoded) || !$decoded) {
+        return array();
+    }
+    try {
+        $keys = mpurseKeys();
+        $plain = decodeGatewayBody($decoded, $keys['aes_key']);
+        return is_array($plain) && $plain ? $plain : $decoded;
+    } catch (Throwable $e) {
+        return $decoded;
+    }
+}
+
+function fetchGatewayStatus($lookupId)
+{
+    $lookupId = trim((string) $lookupId);
+    if ($lookupId === '') {
+        return array();
+    }
+
+    $url = rtrim(envVal(
+        'MPURSE_STATUS_URL',
+        'https://services.mpurse.io/mpurse/super-switch/v1/payments/status'
+    ), '/') . '/' . rawurlencode($lookupId);
+
+    list($httpCode, $decoded) = curlJson('GET', $url, array('Content-Type: application/json'));
+    $got = decodeStatusPayload($decoded);
+    if ($httpCode === 404) {
+        return array('status' => 'pending', 'message' => 'Payment not found');
+    }
+    if ($httpCode >= 500 && !$got) {
+        return array('status' => 'pending');
+    }
+    return is_array($got) ? $got : array();
+}
+
+function isGatewayWebhook($data)
+{
+    if (!is_array($data)) {
+        return false;
+    }
+    if (isset($data['cart_items']) || isset($data['billing_first_name']) || isset($data['payment_method'])) {
+        return false;
+    }
+    $action = isset($data['action']) ? strtolower(trim((string) $data['action'])) : '';
+    if (in_array($action, array('create_session', 'status', 'confirm'), true)) {
+        return false;
+    }
+    $orderId = gatewayText($data, array('orderId', 'order_id'));
+    if ($orderId === '') {
+        return false;
+    }
+    if ($action === 'webhook') {
+        return true;
+    }
+    return gatewayText($data, array('txnId', 'txn_id')) !== ''
+        || gatewayText($data, array('statusCode', 'status_code')) !== ''
+        || in_array(strtoupper(gatewayText($data, array('status'))), array('SUCCESS', 'FAILED', 'FAILURE'), true);
+}
+
+function resolveGatewayStatus($gateway, $webhookHint = array())
+{
+    $rawStatus = gatewayText($gateway, array('status'));
+    if ($rawStatus === '') {
+        $rawStatus = gatewayText($webhookHint, array('status'));
+    }
+    $statusCode = gatewayText($gateway, array('statusCode', 'status_code'));
+    if ($statusCode === '') {
+        $statusCode = gatewayText($webhookHint, array('statusCode', 'status_code'));
+    }
+    if ($rawStatus === '' && $statusCode === '00') {
+        $rawStatus = 'SUCCESS';
+    }
+    $status = normalizeStatus($rawStatus);
+    if ($status === 'pending' && $statusCode === '00') {
+        $status = 'success';
+        if ($rawStatus === '') {
+            $rawStatus = 'SUCCESS';
+        }
+    }
+    return array($status, $rawStatus);
+}
+
+function amountsMatch($left, $right)
+{
+    if ($left === '' || $left === null || $right === '' || $right === null) {
+        return true;
+    }
+    return abs((float) $left - (float) $right) < 0.05;
+}
+
+function applyGatewayUpdate($orderId, $gateway, $lookupMiss)
+{
+    $order = loadOrder($orderId);
+    $savedTxnId = gatewayText($order ?: array(), array('txn_id', 'txnId'));
+    list($status, $rawStatus) = resolveGatewayStatus($gateway);
+    $message = '';
+
+    if ($lookupMiss) {
+        $status = 'pending';
+        $rawStatus = $order && !empty($order['status']) ? (string) $order['status'] : 'PENDING';
+    } else {
+        $message = gatewayText($gateway, array('message', 'statusDescription', 'status_description'));
+        if ($status === 'success' && $order && !amountsMatch($order['amount'], isset($gateway['amount']) ? $gateway['amount'] : null)) {
+            $status = 'pending';
+            $message = 'Payment amount does not match this order.';
+        }
+    }
+
+    $txnId = gatewayText($gateway, array('txn_id', 'txnId'));
+    if ($txnId === '') {
+        $txnId = $savedTxnId;
+    }
+    if ($txnId !== '') {
+        $gateway['txn_id'] = $txnId;
+    }
+    $rrn = gatewayText($gateway, array('rrn'));
+    if ($rrn !== '') {
+        $gateway['rrn'] = $rrn;
+    }
+
+    if ($order && !$lookupMiss) {
+        $order['gateway'] = $gateway;
+        $order['status'] = $rawStatus !== '' ? $rawStatus : $order['status'];
+        if ($txnId !== '') {
+            $order['txn_id'] = $txnId;
+        }
+        if ($status === 'success') {
+            if (empty($order['paid_at'])) {
+                $order['paid_at'] = date('c');
+            }
+            $billingEmail = isset($order['billing']['email']) ? (string) $order['billing']['email'] : '';
+            $needsMerchant = empty($order['emailed_merchant']);
+            $needsCustomer = $billingEmail !== '' && empty($order['emailed_customer']);
+            if ($needsMerchant || $needsCustomer) {
+                $mailResult = sendOrderPaidEmail($order, $gateway);
+                if (!empty($mailResult['merchant'])) {
+                    $order['emailed_merchant'] = true;
+                }
+                if (!empty($mailResult['customer'])) {
+                    $order['emailed_customer'] = true;
+                }
+                $order['emailed'] = !empty($order['emailed_merchant'])
+                    && (empty($billingEmail) || !empty($order['emailed_customer']));
+                if (!$order['emailed']) {
+                    $order['mail_error'] = isset($mailResult['error']) ? (string) $mailResult['error'] : 'Could not send confirmation email.';
+                } else {
+                    unset($order['mail_error']);
+                }
+            }
+        }
+        saveOrder($order);
+    } elseif ($status === 'success') {
+        sendBarePaidEmail($orderId, $gateway);
+    }
+
+    $receiptSent = $order && !empty($order['emailed_customer']);
+    $mailError = $order && !empty($order['mail_error']) ? (string) $order['mail_error'] : '';
+
+    return array(
+        'order_id' => $orderId,
+        'status' => $status,
+        'gateway_status' => $rawStatus,
+        'amount' => isset($gateway['amount']) ? $gateway['amount'] : ($order ? $order['amount'] : null),
+        'txn_id' => $txnId,
+        'rrn' => gatewayText($gateway, array('rrn')),
+        'message' => $message,
+        'qr_data' => ($order && !empty($order['qr_data'])) ? $order['qr_data'] : '',
+        'intent_url' => ($order && !empty($order['intent_url'])) ? $order['intent_url'] : '',
+        'payer_vpa' => $order && !empty($order['payer_vpa']) ? $order['payer_vpa'] : '',
+        'payment_method' => $order && !empty($order['payment_method']) ? $order['payment_method'] : '',
+        'payment_mode' => $order && !empty($order['payment_mode']) ? $order['payment_mode'] : '',
+        'receipt_sent' => $receiptSent,
+        'mail_error' => $mailError,
+    );
+}
+
+function lookupGatewayForOrder($orderId, $extraTxnId = '')
+{
+    $order = loadOrder($orderId);
+    $ids = array();
+    foreach (array(
+        $orderId,
+        gatewayText($order ?: array(), array('txn_id', 'txnId')),
+        $extraTxnId,
+    ) as $id) {
+        $id = trim((string) $id);
+        if ($id !== '' && !in_array($id, $ids, true)) {
+            $ids[] = $id;
+        }
+    }
+
+    $gateway = array();
+    $lookupMiss = true;
+    foreach ($ids as $id) {
+        $candidate = fetchGatewayStatus($id);
+        if (!$candidate) {
+            continue;
+        }
+        $candidateMiss = isStatusLookupMiss($candidate);
+        $candidateStatus = normalizeStatus(gatewayText($candidate, array('status')));
+        if ($candidateStatus === 'pending' && gatewayText($candidate, array('statusCode', 'status_code')) === '00') {
+            $candidateStatus = 'success';
+        }
+        if ($candidateStatus === 'success') {
+            return array($order, $candidate, false);
+        }
+        if (!$candidateMiss) {
+            $gateway = $candidate;
+            $lookupMiss = false;
+            if ($candidateStatus === 'failed') {
+                return array($order, $gateway, false);
+            }
+        } elseif ($lookupMiss) {
+            $gateway = $candidate;
+        }
+    }
+    return array($order, $gateway, $lookupMiss);
+}
+
+function confirmPaymentStatus()
+{
+    $orderId = preg_replace('/[^A-Za-z0-9_-]/', '', v('order_id'));
+    if ($orderId === '') {
+        fail(422, 'Missing order id.');
+    }
+    list($order, $gateway, $lookupMiss) = lookupGatewayForOrder($orderId);
+    ok(applyGatewayUpdate($orderId, $gateway, $lookupMiss));
+}
+
+function handleGatewayWebhook()
+{
+    global $inputData;
+    $orderId = preg_replace('/[^A-Za-z0-9_-]/', '', gatewayText($inputData, array('orderId', 'order_id')));
+    if ($orderId === '') {
+        fail(422, 'Missing order id.');
+    }
+
+    $hookTxn = gatewayText($inputData, array('txnId', 'txn_id'));
+    list($order, $gateway, $lookupMiss) = lookupGatewayForOrder($orderId, $hookTxn);
+    if ($lookupMiss || !$gateway) {
+        $gateway = $inputData;
+        $lookupMiss = false;
+    } else {
+        $gateway = array_merge($gateway, $inputData);
+    }
+
+    $payload = applyGatewayUpdate($orderId, $gateway, $lookupMiss);
+    echo json_encode(array_merge(array('success' => true, 'received' => true), $payload));
+    exit;
+}
+
+function kvRow($label, $value, $multiline = false)
+{
+    if ($value === '') {
+        $value = '-';
+    }
+    $body = $multiline ? nl2br(clean($value)) : clean($value);
+    return '<p style="margin:0 0 8px;"><strong>' . clean($label) . ':</strong> ' . ($multiline ? '<br>' : '') . $body . '</p>';
+}
+
+function wrapEmail($subject, $mainContent, $toEmail)
+{
+    $brandName = 'Aimodel';
+    $tagline = 'Modern AI platform for intelligent automation and sustainable technology.';
+    $brandColor = '#111318';
+    $accent = '#6c5cff';
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' . clean($subject) . '</title></head>
+<body style="margin:0;padding:0;background:#111111;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center" style="padding:30px 10px;">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#ffffff;border:3px solid ' . $accent . ';">
+        <tr><td align="center" style="padding:24px 10px;background:' . $brandColor . ';">
+          <h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:22px;color:' . $accent . ';">' . clean($brandName) . '</h1>
+          <p style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#c6c6c6;">' . clean($tagline) . '</p>
+        </td></tr>
+        <tr><td align="center" style="padding:20px;">
+          <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:600;color:' . $brandColor . ';">' . clean($subject) . '</p>
+          <p style="margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#888;">Received at ' . date('Y-m-d H:i:s') . ' (IST)</p>
+        </td></tr>
+        ' . $mainContent . '
+        <tr><td align="center" style="padding:14px 20px;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#6b7280;">
+          This email was generated from the <strong>' . clean($brandName) . '</strong> website.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>';
+}
+
+function sendOrderPaidEmail($order, $gateway)
+{
+    $result = array(
+        'merchant' => false,
+        'customer' => false,
+        'error' => '',
+    );
+    $brandName = 'Aimodel';
+    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'hello@aimodel.example');
+    $border = '#e5e7eb';
+    $brandColor = '#111111';
+    $billing = isset($order['billing']) && is_array($order['billing']) ? $order['billing'] : array();
+    $cart = isset($order['cart']) && is_array($order['cart']) ? $order['cart'] : array();
+    $name = trim((isset($billing['first_name']) ? $billing['first_name'] : '') . ' ' . (isset($billing['last_name']) ? $billing['last_name'] : ''));
+    $email = isset($billing['email']) ? (string) $billing['email'] : '';
+    $orderId = (string) $order['order_id'];
+    $amount = (string) $order['amount'];
+    $txnId = isset($gateway['txn_id']) ? (string) $gateway['txn_id'] : '';
+    $rrn = isset($gateway['rrn']) ? (string) $gateway['rrn'] : '';
+
+    $cartHtml = '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-top:8px;">
+      <tr style="background:#f3f4f6;">
+        <th align="left" style="padding:8px;border:1px solid ' . $border . ';font-family:Arial,Helvetica,sans-serif;">Item</th>
+        <th align="center" style="padding:8px;border:1px solid ' . $border . ';font-family:Arial,Helvetica,sans-serif;">Qty</th>
+        <th align="right" style="padding:8px;border:1px solid ' . $border . ';font-family:Arial,Helvetica,sans-serif;">Price</th>
+      </tr>';
+    $alt = "Paid order {$orderId}\n\n";
+    foreach ($cart as $item) {
+        $itemName = isset($item['name']) ? (string) $item['name'] : '';
+        $itemQty = isset($item['quantity']) ? (string) $item['quantity'] : '';
+        $itemPrice = isset($item['price']) ? (string) $item['price'] : '';
+        $cartHtml .= '<tr>
+          <td align="left" style="padding:8px;border:1px solid ' . $border . ';font-family:Arial,Helvetica,sans-serif;">' . clean($itemName) . '</td>
+          <td align="center" style="padding:8px;border:1px solid ' . $border . ';font-family:Arial,Helvetica,sans-serif;">' . clean($itemQty) . '</td>
+          <td align="right" style="padding:8px;border:1px solid ' . $border . ';font-family:Arial,Helvetica,sans-serif;">' . clean($itemPrice) . '</td>
+        </tr>';
+        $alt .= $itemName . ' x ' . $itemQty . ' - ' . $itemPrice . "\n";
+    }
+    $cartHtml .= '</table>';
+
+    $townLine = (isset($billing['address']) ? $billing['address'] : '') . ', ' . (isset($billing['town']) ? $billing['town'] : '');
+    if (!empty($billing['state'])) {
+        $townLine .= ', ' . $billing['state'];
+    }
+    if (!empty($billing['postcode'])) {
+        $townLine .= ' - ' . $billing['postcode'];
+    }
+
+    $mainContent =
+        '<tr><td style="padding:0 24px 24px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid ' . $border . ';border-radius:4px;">
+          <tr><td style="background:#f3f4f6;padding:8px 10px;font-family:Arial,Helvetica,sans-serif;font-weight:600;color:' . $brandColor . ';">Payment</td></tr>
+          <tr><td style="padding:10px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">'
+        . kvRow('Order ID', $orderId)
+        . kvRow('Amount', 'INR ' . $amount)
+        . kvRow('Txn ID', $txnId)
+        . kvRow('RRN', $rrn)
+        . kvRow('MID', isset($order['mid']) ? (string) $order['mid'] : '')
+        . '</td></tr></table></td></tr>
+        <tr><td style="padding:0 24px 24px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid ' . $border . ';border-radius:4px;">
+          <tr><td style="background:#f3f4f6;padding:8px 10px;font-family:Arial,Helvetica,sans-serif;font-weight:600;color:' . $brandColor . ';">Billing</td></tr>
+          <tr><td style="padding:10px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">
+            <p><strong>' . clean($name) . '</strong></p>
+            <p>' . clean($email) . '</p>
+            <p>Phone: ' . clean(isset($billing['phone']) ? (string) $billing['phone'] : '') . '</p>
+            <p>' . clean($townLine) . '</p>'
+        . (!empty($billing['notes']) ? '<p><strong>Notes:</strong> ' . nl2br(clean((string) $billing['notes'])) . '</p>' : '')
+        . '</td></tr></table></td></tr>
+        <tr><td style="padding:0 24px 24px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid ' . $border . ';border-radius:4px;">
+          <tr><td style="background:#f3f4f6;padding:8px 10px;font-family:Arial,Helvetica,sans-serif;font-weight:600;color:' . $brandColor . ';">Order Summary</td></tr>
+          <tr><td style="padding:10px;">' . $cartHtml . '</td></tr>
+        </table></td></tr>';
+
+    $subject = 'Paid order - Aimodel - ' . $orderId;
+    $html = wrapEmail($subject, $mainContent, $toEmail);
+    $alt .= "Billing: {$name}\nEmail: {$email}\nAmount: {$amount}\n";
+
+    if (empty($order['emailed_merchant'])) {
+        $result['merchant'] = deliverMail($toEmail, $brandName, $subject, $html, $alt, $email, $name);
+    } else {
+        $result['merchant'] = true;
+    }
+
+    if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && empty($order['emailed_customer'])) {
+        $customerIntro =
+            '<tr><td style="padding:0 24px 8px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">'
+            . '<p>Hi ' . clean($name) . ',</p>'
+            . '<p>Thank you — we received your payment of <strong>₹' . clean($amount) . '</strong> for order <strong>' . clean($orderId) . '</strong>.</p>'
+            . '<p>This is your receipt. Keep the order ID if you need to contact us.</p>'
+            . '</td></tr>';
+        $result['customer'] = deliverMail(
+            $email,
+            $name,
+            'Payment receipt — ' . $brandName . ' — ' . $orderId,
+            wrapEmail('Payment receipt', $customerIntro . $mainContent, $email),
+            'Payment receipt for order ' . $orderId . ' — ₹' . $amount . "\n" . $alt
+        );
+    } elseif (!empty($order['emailed_customer'])) {
+        $result['customer'] = true;
+    }
+
+    $mailDetail = function_exists('ne_mail_last_error') ? ne_mail_last_error() : '';
+    if (!$result['merchant'] && !$result['customer']) {
+        $result['error'] = $mailDetail !== '' ? $mailDetail : 'Could not send the receipt email.';
+    } elseif (!$result['customer'] && $email !== '') {
+        $result['error'] = $mailDetail !== ''
+            ? 'Merchant notified, but the customer receipt failed: ' . $mailDetail
+            : 'Merchant notified but customer receipt email could not be sent.';
+    } elseif (!$result['merchant']) {
+        $result['error'] = $mailDetail !== ''
+            ? 'Customer receipt sent, but the merchant copy failed: ' . $mailDetail
+            : 'Customer receipt sent, but the merchant copy could not be sent.';
+    }
+
+    return $result;
+}
+
+function sendBarePaidEmail($orderId, $gateway)
+{
+    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'hello@aimodel.example');
+    $amount = isset($gateway['amount']) ? (string) $gateway['amount'] : '';
+    $txnId = isset($gateway['txn_id']) ? (string) $gateway['txn_id'] : '';
+    $subject = 'Paid order - Aimodel - ' . $orderId;
+    $main = '<tr><td style="padding:0 24px 24px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">'
+        . kvRow('Order ID', $orderId)
+        . kvRow('Amount', $amount)
+        . kvRow('Txn ID', $txnId)
+        . '</td></tr>';
+    deliverMail($toEmail, 'Aimodel', $subject, wrapEmail($subject, $main, $toEmail), $subject);
+}

@@ -6,7 +6,12 @@ export type DemoCheckout = {
   company: string;
   email: string;
   country: string;
+  phone: string;
+  address: string;
+  city: string;
+  zip: string;
   order?: string;
+  tokens?: number;
 };
 
 const key = "aimodel-demo-checkout";

@@ -12,7 +12,7 @@ export default function PaymentFailedPage() {
     <CheckoutFrame
       eyebrow="Payment failed"
       title="Payment couldn't be completed."
-      lede="This is a demonstration error. No transaction was attempted."
+      lede="The UPI payment did not finish. You can start it again from checkout."
     >
       <div className="flex flex-wrap gap-3">
         <Button href="/checkout/payment?plan=route&billing=monthly">Try again</Button>

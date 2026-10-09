@@ -139,12 +139,12 @@ export default async function ModelDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="border-b border-border px-6 py-10 md:px-8">
+        <div className="min-w-0 border-b border-border px-6 py-10 md:px-8">
           <h2 className="text-[20px] leading-tight font-medium tracking-[-0.03em]">Same request. This model.</h2>
           <p className="mt-2 max-w-[420px] text-[14px] leading-6 text-muted">
             Keep the client you already use. The model id is the only line that changes.
           </p>
-          <pre className="mt-5 overflow-x-auto rounded-[16px] border border-border bg-[#f7f8fa] px-5 py-5 font-mono text-[13px] leading-6 text-foreground">
+          <pre className="mt-5 max-w-full overflow-x-auto rounded-[16px] border border-border bg-[#f7f8fa] px-4 py-4 font-mono text-[12px] leading-6 break-words whitespace-pre-wrap text-foreground md:px-5 md:py-5 md:text-[13px] lg:break-normal lg:whitespace-pre">
             {exampleFor(model)}
           </pre>
         </div>

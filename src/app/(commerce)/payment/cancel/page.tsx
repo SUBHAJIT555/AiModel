@@ -12,7 +12,7 @@ export default function PaymentCancelPage() {
     <CheckoutFrame
       eyebrow="Payment cancelled"
       title="Nothing was charged."
-      lede="The demo stopped before a payment simulation finished."
+      lede="You left before a UPI payment started."
     >
       <div className="flex flex-wrap gap-3">
         <Button href="/checkout?plan=route&billing=monthly">Return to checkout</Button>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { contactOffice, contactTopics } from "@/data/contact";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import { submitToMailer } from "@/lib/forms/submitToMailer";
 
 const fieldClass =
   "w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-[14px] text-foreground outline-none placeholder:text-muted focus:border-primary focus:ring-1 focus:ring-primary/30";
@@ -12,19 +13,39 @@ const labelClass = "mb-1.5 block text-[14px] font-medium";
 
 export function ContactForm() {
   const [sent, setSent] = useState(false);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
-  function submit(formData: FormData) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     const first = String(formData.get("firstName") ?? "").trim();
     const last = String(formData.get("lastName") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
     const message = String(formData.get("message") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
+    const topics = formData.getAll("topic").map(String).filter(Boolean);
     if (!first || !last || !message || !email.includes("@")) {
       setError("Add your name, email, and a message.");
       return;
     }
     setError("");
-    setSent(true);
+    setPending(true);
+    try {
+      await submitToMailer({
+        formType: "contact",
+        name: `${first} ${last}`,
+        email,
+        phone,
+        subject: topics.length ? topics.join(", ") : "Contact",
+        message,
+      });
+      setSent(true);
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : "Unable to send message.");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -36,21 +57,21 @@ export function ContactForm() {
               Tell us about the route
             </h2>
             <p className="mt-3 text-[15px] leading-7 text-muted">
-              Or write{" "}
+              You can also write{" "}
               <a
                 href={`mailto:${contactOffice.email}`}
                 className="font-medium text-primary underline decoration-primary/40 decoration-dotted underline-offset-4"
               >
                 {contactOffice.email}
               </a>
-              . This form does not send the message.
+              .
             </p>
             {sent ? (
               <p className="mt-8 max-w-md text-[16px] leading-7">
-                Noted on this page. The message is not sent.
+                The note was sent. A reply goes to the email you entered.
               </p>
             ) : (
-              <form action={submit} className="mt-8 space-y-5">
+              <form onSubmit={submit} className="mt-8 space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className={labelClass}>
@@ -115,8 +136,8 @@ export function ContactForm() {
                   </div>
                 </fieldset>
                 {error ? <p className="text-[14px] text-danger">{error}</p> : null}
-                <Button type="submit" className="h-11 w-full justify-center">
-                  Leave a note
+                <Button type="submit" disabled={pending} className="h-11 w-full justify-center">
+                  {pending ? "Sending…" : "Leave a note"}
                 </Button>
               </form>
             )}

@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { PaymentSuccess } from "@/components/checkout/PaymentSuccess";
+import { CheckoutPay } from "@/components/checkout/CheckoutPay";
 
 export const metadata: Metadata = {
-  title: "Payment successful",
+  title: "UPI payment",
   robots: { index: false, follow: false },
 };
 
-export default function PaymentSuccessPage() {
+export default function CheckoutPayPage() {
   return (
     <Suspense fallback={null}>
-      <PaymentSuccess />
+      <CheckoutPay />
     </Suspense>
   );
 }

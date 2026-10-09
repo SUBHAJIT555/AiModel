@@ -4,6 +4,13 @@ import { legalDocs, legalNav, type LegalDoc } from "@/data/legal";
 import { contactOffice } from "@/data/contact";
 import { HeroBackdrop } from "@/components/sections/HeroBackdrop";
 
+const heroSrc = {
+  terms: "/heroes/legal-terms.jpg",
+  privacy: "/heroes/legal-privacy.jpg",
+  cookies: "/heroes/legal-cookies.jpg",
+  "acceptable-use": "/heroes/legal-use.jpg",
+} as const;
+
 export function legalMetadata(slug: LegalDoc["slug"]): Metadata {
   const page = legalDocs[slug];
   return { title: page.title, description: page.description };
@@ -16,7 +23,7 @@ export function LegalPage({ slug }: { slug: LegalDoc["slug"] }) {
     <div className="bg-surface -mt-[5.5rem] pt-[5.5rem] md:-mt-[7.5rem] md:pt-[7.5rem]">
       <section>
         <div className="relative mx-auto w-full max-w-5xl">
-            <HeroBackdrop src="/heroes/home.jpg" />
+            <HeroBackdrop src={heroSrc[slug]} />
             <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center px-6 pt-10 pb-10 text-center md:pt-14 md:pb-12">
               <p className="inline-flex items-center gap-2 text-[14px] font-medium text-primary">
                 <span aria-hidden className="size-3.5 rounded-[4px] bg-primary" />

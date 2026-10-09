@@ -5,3 +5,6 @@ out
 *.log
 .env
 .env*.local
+public/api/.env
+public/api/mpurse.env
+public/api/data/*.json

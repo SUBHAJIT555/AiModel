@@ -16,7 +16,7 @@ export function Footer() {
           <div className="mt-8 border-t border-border pt-6">
             <p className="text-sm font-medium text-foreground">Newsletter</p>
             <p className="mt-1 max-w-xs text-sm leading-6 text-muted">
-              An email for catalog news. This page does not send them.
+              An email for catalog news. Join sends it to the mailer.
             </p>
             <div className="mt-4">
               <FooterNewsletter />

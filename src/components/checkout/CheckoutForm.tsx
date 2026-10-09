@@ -43,10 +43,11 @@ export function CheckoutForm() {
     const last = String(formData.get("lastName") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim();
     const address = String(formData.get("address") ?? "").trim();
+    const city = String(formData.get("city") ?? "").trim();
     const zip = String(formData.get("zip") ?? "").trim();
     const mobile = String(formData.get("mobile") ?? "").trim();
-    if (!first || !last || !address || !zip || !mobile || !email.includes("@")) {
-      setError("Add your name, address, zip code, email, and mobile number to continue.");
+    if (!first || !last || !address || !city || !zip || !mobile || !email.includes("@")) {
+      setError("Add your name, address, city, zip code, email, and mobile number to continue.");
       return;
     }
     saveCheckout({
@@ -57,6 +58,11 @@ export function CheckoutForm() {
       company: String(formData.get("company") ?? ""),
       email,
       country,
+      phone: mobile,
+      address,
+      city,
+      zip,
+      tokens: tokens > 0 ? tokens : undefined,
     });
     const query = new URLSearchParams({ plan: plan.id, billing, country });
     if (model) query.set("model", model.slug);
@@ -82,6 +88,7 @@ export function CheckoutForm() {
           <div className="sm:col-span-2">
             <Field label="Address" name="address" autoComplete="street-address" placeholder="Enter address" required />
           </div>
+          <Field label="City" name="city" autoComplete="address-level2" placeholder="Enter city" required />
           <Field label="Zip code" name="zip" autoComplete="postal-code" placeholder="Enter zip code" required />
           <Field label="Email" name="email" type="email" autoComplete="email" placeholder="Enter email" required />
           <Field label="Mobile number" name="mobile" type="tel" autoComplete="tel" placeholder="Enter mobile number" required />

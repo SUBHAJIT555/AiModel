@@ -5,7 +5,7 @@ import { PaymentStep } from "@/components/checkout/PaymentStep";
 
 export const metadata: Metadata = {
   title: "Payment",
-  description: "Simulated payment step. No card details are collected.",
+  description: "Pay the quoted plan with UPI.",
   robots: { index: false, follow: false },
 };
 
@@ -13,8 +13,8 @@ export default function CheckoutPaymentPage() {
   return (
     <CheckoutFrame
       eyebrow="Payment"
-      title="Choose a method."
-      lede="Pick a method to finish the demo. No card number is collected and nothing is charged."
+      title="Pay with UPI."
+      lede="UPI opens a QR code on a computer and your UPI app on a phone. Card and net banking are not charged."
     >
       <Suspense fallback={null}>
         <PaymentStep />

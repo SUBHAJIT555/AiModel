@@ -8,7 +8,7 @@ export function AboutHero() {
     <section className="bg-surface">
       <div className="home-frame">
         <div className="relative">
-          <HeroBackdrop src="/heroes/home.jpg" />
+          <HeroBackdrop src="/heroes/about.jpg" />
           <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center px-6 pt-10 pb-10 text-center md:pt-14 md:pb-12">
             <h1 className="text-[clamp(2.75rem,5vw,4.25rem)] leading-[1.02] font-medium tracking-[-0.04em]">
               The app stays.

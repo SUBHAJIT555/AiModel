@@ -182,7 +182,7 @@ export const legalDocs: Record<LegalDoc["slug"], LegalDoc> = {
         title: "What is stored",
         body: [
           `A cookie is a small file a site asks your browser to keep. This site does not use cookies to follow you across other websites, and it does not load an ad network.`,
-          `Checkout saves one draft under the key aimodel-demo-checkout in session storage. Session storage is not a cookie, but it is the same idea: a note your browser holds for this site. It contains the plan, the billing period, the model if you chose one, and the name, company, email, and country you typed.`,
+          `Checkout saves one draft under the key aimodel-demo-checkout in session storage. Session storage is not a cookie, but it is the same idea: a note your browser holds for this site. It contains the plan, the billing period, the model if you chose one, and the name, company, email, country, phone, address, city, and zip code you typed.`,
         ],
       },
       {

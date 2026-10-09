@@ -165,12 +165,12 @@ export function Navbar() {
           <Logo compact />
           <button
             type="button"
-            className="inline-flex size-9 items-center justify-center rounded-[10px] text-foreground hover:bg-surface-subtle"
+            className="inline-flex size-10 items-center justify-center rounded-[12px] text-foreground hover:bg-surface-subtle"
             aria-controls={mobileId}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen((value) => !value)}
           >
-            {mobileOpen ? <X aria-hidden className="size-4" /> : <Menu aria-hidden className="size-4" />}
+            {mobileOpen ? <X aria-hidden className="size-5" /> : <Menu aria-hidden className="size-5" />}
             <span className="sr-only">{mobileOpen ? "Close menu" : "Open menu"}</span>
           </button>
         </div>

@@ -22,6 +22,8 @@ export function OrderReceipt({
   volume,
   model,
   method,
+  paid = false,
+  orderId,
 }: {
   planName: string;
   billing: "monthly" | "annual";
@@ -31,6 +33,8 @@ export function OrderReceipt({
   volume: string | null;
   model?: { displayName: string; provider: string; providerSlug: string } | null;
   method?: string;
+  paid?: boolean;
+  orderId?: string;
 }) {
   const gst = gstBreakup(subtotal, country);
   const showBrands = !model && (variable || billing === "monthly");
@@ -53,6 +57,7 @@ export function OrderReceipt({
       <p className="mt-2 font-mono text-[11px] text-black/55">
         {planName} · {period}
       </p>
+      {orderId ? <p className="mt-1 font-mono text-[11px] text-black/55">Order {orderId}</p> : null}
       {model ? (
         <p className="mt-3 flex items-center gap-2 font-mono text-[12px]">
           <span className="grid size-7 place-items-center rounded-full bg-[#f6f6f7] shadow-[0_0_0_1px_rgb(17_19_24/0.08)]">
@@ -98,7 +103,9 @@ export function OrderReceipt({
       <Rule />
       <p className="text-center text-[13px] font-semibold tracking-[0.16em]">THANK YOU</p>
       <Barcode />
-      <p className="mt-2 text-center font-mono text-[10px] tracking-[0.06em] text-black/40 uppercase">Demo · nothing is charged</p>
+      <p className="mt-2 text-center font-mono text-[10px] tracking-[0.06em] text-black/40 uppercase">
+        {paid ? "Paid by UPI" : "Payable by UPI"}
+      </p>
     </aside>
   );
 }

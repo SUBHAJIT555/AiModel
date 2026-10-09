@@ -31,7 +31,7 @@ export default function PricingPage() {
     <section className="bg-surface -mt-[5.5rem] pt-[5.5rem] pb-8 md:-mt-[7.5rem] md:pt-[7.5rem]">
       <div className="home-frame">
         <div className="relative">
-          <HeroBackdrop src="/heroes/services.jpg" />
+          <HeroBackdrop src="/heroes/pricing.jpg" />
           <div className="relative z-10 mx-auto flex max-w-[760px] flex-col items-center px-6 pt-10 pb-8 text-center md:pt-14 md:pb-10">
             <p className="inline-flex items-center gap-2 text-[14px] font-medium text-primary">
               <span aria-hidden className="size-3.5 rounded-[4px] bg-primary" />

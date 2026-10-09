@@ -5,7 +5,7 @@ import { CheckoutFrame } from "@/components/checkout/CheckoutFrame";
 
 export const metadata: Metadata = {
   title: "Checkout",
-  description: "Demonstration checkout. No payment is collected.",
+  description: "Confirm the plan, then pay with UPI.",
   robots: { index: false, follow: false },
 };
 
@@ -14,7 +14,7 @@ export default function CheckoutPage() {
     <CheckoutFrame
       eyebrow="Checkout"
       title="Review the order."
-      lede="Confirm the plan and your details. This demo does not collect a payment."
+      lede="Confirm the plan and your details. The next step pays the total with UPI."
     >
       <Suspense fallback={null}>
         <CheckoutForm />
