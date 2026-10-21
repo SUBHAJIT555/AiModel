@@ -23,7 +23,7 @@ function snippetText(tab: Tab, model: string) {
     return `response = client.chat(\n    model="${model}",\n    messages=[{"role": "user"}]\n)`;
   }
   if (tab === "cURL") {
-    return `curl https://api.example.com/v1/chat \\\n  -d '{"model":"${model}"}'`;
+    return `curl https://api.easy-bay.com/v1/chat \\\n  -d '{"model":"${model}"}'`;
   }
   return `const response = await client.chat({\n  model: "${model}",\n  messages: [{ role: "user" }]\n});`;
 }
@@ -57,7 +57,7 @@ function Snippet({ tab, model }: { tab: Tab; model: string }) {
     return (
       <div className="text-[#e7e9ee]">
         <p className={line}>
-          <span className={key}>curl</span> https://api.example.com/v1/chat \
+          <span className={key}>curl</span> https://api.easy-bay.com/v1/chat \
         </p>
         <p className={line}>
           {"  "}-d <span className={modelChip}>&apos;{`{"model":"${model}"}`}&apos;</span>

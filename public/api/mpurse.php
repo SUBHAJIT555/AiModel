@@ -1184,7 +1184,7 @@ function sendOrderPaidEmail($order, $gateway)
         'error' => '',
     );
     $brandName = 'Modexa';
-    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'hello@modexa.example');
+    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'info@easy-bay.com');
     $border = '#e5e7eb';
     $brandColor = '#111111';
     $billing = isset($order['billing']) && is_array($order['billing']) ? $order['billing'] : array();
@@ -1297,7 +1297,7 @@ function sendOrderPaidEmail($order, $gateway)
 
 function sendBarePaidEmail($orderId, $gateway)
 {
-    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'hello@modexa.example');
+    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'info@easy-bay.com');
     $amount = isset($gateway['amount']) ? (string) $gateway['amount'] : '';
     $txnId = isset($gateway['txn_id']) ? (string) $gateway['txn_id'] : '';
     $subject = 'Paid order - Modexa - ' . $orderId;

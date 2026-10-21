@@ -4,7 +4,7 @@ export const contactOffice = {
   company: "Modexa",
   address: "100 Feet Road, Indiranagar, Bengaluru, Karnataka 560038, India",
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=Indiranagar+Bengaluru",
-  email: "hello@modexa.example",
+  email: "info@easy-bay.com",
   phone: "+91 80 0000 0000",
   phoneHref: "tel:+918000000000",
   days: "Mon – Sat",

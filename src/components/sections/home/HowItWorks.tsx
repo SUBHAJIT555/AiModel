@@ -70,7 +70,7 @@ function CodeCard() {
     <div className={`w-[min(100%,440px)] overflow-hidden rounded-[20px] bg-[#17191e] p-5 ${panelShadow}`}>
       <div className="overflow-x-auto text-[#e7e9ee]">
         <p className={line}>
-          <span className="text-[#8b7cff]">curl</span> https://api.modexa.com/v1/chat \
+          <span className="text-[#8b7cff]">curl</span> https://api.easy-bay.com/v1/chat \
         </p>
         <p className={line}>
           {"  "}

@@ -16,7 +16,7 @@ function snippet(tab: (typeof tabs)[number], model: string) {
     return `response = client.chat(\n    model="${model}",\n    messages=[{"role": "user", "content": "Draft a summary."}],\n)`;
   }
   if (tab === "cURL") {
-    return `curl https://api.example.com/v1/chat \\\n  -H "content-type: application/json" \\\n  -d '{"model":"${model}"}'`;
+    return `curl https://api.easy-bay.com/v1/chat \\\n  -H "content-type: application/json" \\\n  -d '{"model":"${model}"}'`;
   }
   return `const response = await client.chat({\n  model: "${model}",\n  messages: [{ role: "user", content: "Draft a summary." }],\n});`;
 }

@@ -95,7 +95,7 @@ function ne_deliver_mail(
     $smtpPass = ne_env('SMTP_PASS');
     $smtpPort = (int) ne_env('SMTP_PORT', '465');
     $smtpSecure = ne_env('SMTP_SECURE', 'smtps');
-    $fromEmail = ne_env('MAIL_FROM', ne_env('ORDER_NOTIFY_EMAIL', 'hello@modexa.example'));
+    $fromEmail = ne_env('MAIL_FROM', ne_env('ORDER_NOTIFY_EMAIL', 'info@easy-bay.com'));
     if ($smtpUser !== '') {
         $fromEmail = $smtpUser;
     }

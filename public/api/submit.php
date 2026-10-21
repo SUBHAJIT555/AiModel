@@ -255,7 +255,7 @@ if ($formType === 'partnership') {
     $name = v('fullName');
 }
 
-$toEmail = ne_env('MAIL_TO', ne_env('ORDER_NOTIFY_EMAIL', 'hello@modexa.example'));
+$toEmail = ne_env('MAIL_TO', ne_env('ORDER_NOTIFY_EMAIL', 'info@easy-bay.com'));
 
 if ($formType === 'contact') {
     $subject = 'New contact inquiry — Modexa — ' . $name;
