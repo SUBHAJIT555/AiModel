@@ -1,4 +1,4 @@
-export const PENDING_ORDER_KEY = "aimodel_pending_order_id";
+export const PENDING_ORDER_KEY = "modexa_pending_order_id";
 
 export function preferredUpiMode(): "INTENT" | "QR" {
   if (typeof navigator === "undefined") return "QR";

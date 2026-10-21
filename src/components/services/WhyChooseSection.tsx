@@ -36,7 +36,7 @@ const reasons = [
 
 export function WhyChooseSection() {
   return (
-    <section id="why-aimodel" className="scroll-mt-28 bg-surface">
+    <section id="why-modexa" className="scroll-mt-28 bg-surface">
       <div className="home-frame border-t border-border">
         <Reveal>
           <h2 className="max-w-xl px-6 py-8 text-[clamp(1.875rem,2.6vw,2.25rem)] leading-[1.15] font-medium tracking-[-0.03em] md:px-10 md:py-10">

@@ -116,7 +116,7 @@ export const legalDocs: Record<LegalDoc["slug"], LegalDoc> = {
       {
         title: "What you type",
         body: [
-          `The contact form asks for a first name, a last name, an email, an optional phone number, a message, and a topic. Submitting it shows a confirmation on the page. The message is not emailed and is not stored on a server.`,
+          `The contact form asks for a first name, a last name, an email, an optional phone number, a message, and a topic. Submitting it emails the note to the desk and sends a short receipt to the address you typed. The site does not keep a copy on its own server.`,
           `Checkout asks for a name, a company, an email, and a country so the receipt can show a bill. That draft is kept in session storage in your browser and cleared when the browsing session ends. It is not a customer record.`,
         ],
       },
@@ -182,7 +182,7 @@ export const legalDocs: Record<LegalDoc["slug"], LegalDoc> = {
         title: "What is stored",
         body: [
           `A cookie is a small file a site asks your browser to keep. This site does not use cookies to follow you across other websites, and it does not load an ad network.`,
-          `Checkout saves one draft under the key aimodel-demo-checkout in session storage. Session storage is not a cookie, but it is the same idea: a note your browser holds for this site. It contains the plan, the billing period, the model if you chose one, and the name, company, email, country, phone, address, city, and zip code you typed.`,
+          `Checkout saves one draft under the key modexa-demo-checkout in session storage. Session storage is not a cookie, but it is the same idea: a note your browser holds for this site. It contains the plan, the billing period, the model if you chose one, and the name, company, email, country, phone, address, city, and zip code you typed.`,
         ],
       },
       {

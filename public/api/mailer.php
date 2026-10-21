@@ -1,8 +1,51 @@
 <?php
 declare(strict_types=1);
 
+function ne_load_env(): void
+{
+    static $loaded = false;
+    if ($loaded) {
+        return;
+    }
+    $loaded = true;
+    $candidates = array(
+        __DIR__ . DIRECTORY_SEPARATOR . '.env',
+        dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env',
+        dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . '.env',
+    );
+    foreach ($candidates as $path) {
+        if (!is_file($path) || !is_readable($path)) {
+            continue;
+        }
+        $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (!is_array($lines)) {
+            return;
+        }
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
+                continue;
+            }
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim(trim($value), "\"'");
+            if ($key === '') {
+                continue;
+            }
+            if (!isset($_ENV[$key]) || $_ENV[$key] === '') {
+                $_ENV[$key] = $value;
+            }
+            if (getenv($key) === false || getenv($key) === '') {
+                putenv($key . '=' . $value);
+            }
+        }
+        return;
+    }
+}
+
 function ne_env(string $key, string $default = ''): string
 {
+    ne_load_env();
     if (isset($_ENV[$key]) && $_ENV[$key] !== '') {
         return (string) $_ENV[$key];
     }
@@ -52,11 +95,11 @@ function ne_deliver_mail(
     $smtpPass = ne_env('SMTP_PASS');
     $smtpPort = (int) ne_env('SMTP_PORT', '465');
     $smtpSecure = ne_env('SMTP_SECURE', 'smtps');
-    $fromEmail = ne_env('MAIL_FROM', ne_env('ORDER_NOTIFY_EMAIL', 'hello@aimodel.example'));
+    $fromEmail = ne_env('MAIL_FROM', ne_env('ORDER_NOTIFY_EMAIL', 'hello@modexa.example'));
     if ($smtpUser !== '') {
         $fromEmail = $smtpUser;
     }
-    $fromName = ne_env('MAIL_FROM_NAME', 'Aimodel');
+    $fromName = ne_env('MAIL_FROM_NAME', 'Modexa');
 
     if ($smtpHost !== '' && $smtpUser !== '' && $smtpPass !== '') {
         $autoload = ne_find_autoload();
@@ -78,6 +121,13 @@ function ne_deliver_mail(
             $mail->Username = $smtpUser;
             $mail->Password = $smtpPass;
             $mail->Port = $smtpPort > 0 ? $smtpPort : 465;
+            $mail->SMTPOptions = array(
+                'ssl' => array(
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'allow_self_signed' => false,
+                ),
+            );
             if ($smtpSecure === 'smtps' || $smtpPort === 465) {
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
             } else {

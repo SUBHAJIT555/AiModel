@@ -1,6 +1,6 @@
 <?php
 /**
- * Aimodel mailer — contact, newsletter, quote, partnership forms.
+ * Modexa mailer — contact, newsletter, quote, partnership forms.
  * GET  = health check JSON
  * POST = send email (SMTP from .env when set, else PHP mail())
  */
@@ -58,7 +58,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
 if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_exit(200, array(
         'ok' => true,
-        'service' => 'aimodel-mailer',
+        'service' => 'modexa-mailer',
         'php' => PHP_VERSION,
         'mail' => function_exists('mail'),
     ));
@@ -183,8 +183,8 @@ function cartItems(): array
 
 function ne_email_shell(string $subject, string $mainContent, string $toEmail): string
 {
-    $brandName = ne_env('MAIL_FROM_NAME', 'Aimodel');
-    $tagline = 'Modern AI platform for intelligent automation and sustainable technology.';
+    $brandName = ne_env('MAIL_FROM_NAME', 'Modexa');
+    $tagline = 'One URL for the models in the catalog.';
     $brandColor = '#111318';
     $accent = '#6c5cff';
     $border = '#dbe4eb';
@@ -255,16 +255,16 @@ if ($formType === 'partnership') {
     $name = v('fullName');
 }
 
-$toEmail = ne_env('MAIL_TO', ne_env('ORDER_NOTIFY_EMAIL', 'hello@aimodel.example'));
+$toEmail = ne_env('MAIL_TO', ne_env('ORDER_NOTIFY_EMAIL', 'hello@modexa.example'));
 
 if ($formType === 'contact') {
-    $subject = 'New contact inquiry — Aimodel — ' . $name;
+    $subject = 'New contact inquiry — Modexa — ' . $name;
 } elseif ($formType === 'newsletter') {
-    $subject = 'Newsletter signup — Aimodel — ' . $email;
+    $subject = 'Newsletter signup — Modexa — ' . $email;
 } elseif ($formType === 'partnership') {
-    $subject = 'Partner application — Aimodel — ' . $name;
+    $subject = 'Partner application — Modexa — ' . $name;
 } else {
-    $subject = 'Quote request — Aimodel — ' . $name;
+    $subject = 'Quote request — Modexa — ' . $name;
 }
 
 $mainContent = '';
@@ -321,15 +321,15 @@ if ($formType === 'contact') {
 }
 
 $html = ne_email_shell($subject, $mainContent, $toEmail);
-$sent = ne_deliver_mail($toEmail, 'Aimodel', $subject, $html, $alt, $email, $name);
+$sent = ne_deliver_mail($toEmail, 'Modexa', $subject, $html, $alt, $email, $name);
 
 if ($sent && in_array($formType, array('contact', 'partnership'), true)) {
-    $ackSubject = 'We received your message — Aimodel';
+    $ackSubject = 'We received your message — Modexa';
     $ackHtml = '<p style="font-family:Arial,sans-serif;font-size:14px;color:#111318;">Hi ' . clean($name) . ',</p>'
-        . '<p style="font-family:Arial,sans-serif;font-size:14px;color:#111318;">Thank you for contacting <strong>Aimodel</strong>. We have received your '
+        . '<p style="font-family:Arial,sans-serif;font-size:14px;color:#111318;">Thank you for contacting <strong>Modexa</strong>. We have received your '
         . ($formType === 'partnership' ? 'partner application' : 'message')
         . ' and will get back to you shortly.</p>'
-        . '<p style="font-family:Arial,sans-serif;font-size:14px;color:#111318;">Regards,<br><strong>Aimodel Team</strong></p>';
+        . '<p style="font-family:Arial,sans-serif;font-size:14px;color:#111318;">Regards,<br><strong>Modexa Team</strong></p>';
     ne_deliver_mail($email, $name, $ackSubject, $ackHtml, strip_tags($ackHtml), '', '');
 }
 

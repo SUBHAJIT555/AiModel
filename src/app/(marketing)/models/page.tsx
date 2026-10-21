@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 
 export const metadata: Metadata = {
   title: "Models",
-  description: "The Aimodel catalog: reasoning, coding, vision, image, video, and audio.",
+  description: "The Modexa catalog: reasoning, coding, vision, image, video, and audio.",
 };
 
 export default function ModelsPage() {

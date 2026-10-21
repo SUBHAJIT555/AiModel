@@ -1,5 +1,5 @@
 export const siteConfig = {
-  name: "Aimodel",
+  name: "Modexa",
   description:
     "One URL for the models in the catalog. Prices in rupees, and another model if the first provider does not answer.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com",

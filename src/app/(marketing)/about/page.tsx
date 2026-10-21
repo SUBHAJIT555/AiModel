@@ -12,7 +12,7 @@ import { pricingPlans } from "@/data/pricing";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Aimodel sits between the app and the models. One request, a catalog you can read, and another model if the first one does not answer.",
+    "Modexa sits between the app and the models. One request, a catalog you can read, and another model if the first one does not answer.",
 };
 
 export default function AboutPage() {

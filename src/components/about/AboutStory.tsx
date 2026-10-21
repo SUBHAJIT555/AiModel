@@ -32,7 +32,7 @@ export function AboutStory() {
               Teams were writing a new client every time they added a provider. The body changed. The fields changed. The app had to change with them.
             </p>
             <p>
-              Aimodel keeps that request in one shape. Name a model, or leave the route to decide. If the first one does not answer, the next one can. You still read one reply.
+              Modexa keeps that request in one shape. Name a model, or leave the route to decide. If the first one does not answer, the next one can. You still read one reply.
             </p>
           </div>
         </div>

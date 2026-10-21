@@ -32,12 +32,12 @@ export const productionSteps = [
 ] as const;
 
 export const sdkInstall: Record<string, string> = {
-  JavaScript: "npm install aimodel",
-  Python: "pip install aimodel",
-  Go: "go get github.com/example/aimodel",
-  Ruby: "gem install aimodel",
-  Java: "implementation 'com.example:aimodel'",
-  "C#": "dotnet add package Aimodel",
-  PHP: "composer require example/aimodel",
-  Rust: "cargo add aimodel",
+  JavaScript: "npm install modexa",
+  Python: "pip install modexa",
+  Go: "go get github.com/example/modexa",
+  Ruby: "gem install modexa",
+  Java: "implementation 'com.example:modexa'",
+  "C#": "dotnet add package Modexa",
+  PHP: "composer require example/modexa",
+  Rust: "cargo add modexa",
 };

@@ -14,7 +14,7 @@ export type DemoCheckout = {
   tokens?: number;
 };
 
-const key = "aimodel-demo-checkout";
+const key = "modexa-demo-checkout";
 
 export function saveCheckout(value: DemoCheckout) {
   sessionStorage.setItem(key, JSON.stringify(value));

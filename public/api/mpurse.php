@@ -553,7 +553,7 @@ function collectCheckout()
     }
     $description = substr(implode(', ', $names), 0, 255);
     if ($description === '') {
-        $description = 'Aimodel order';
+        $description = 'Modexa order';
     }
 
     return array(
@@ -731,7 +731,7 @@ function upiDirectPayload($checkout, $paymentMode, $payeeVpa)
     $note = preg_replace('/\s+/', ' ', (string) $checkout['description']);
     $note = trim((string) $note);
     if ($note === '') {
-        $note = 'Aimodel order';
+        $note = 'Modexa order';
     }
 
     $payload = array(
@@ -1149,8 +1149,8 @@ function kvRow($label, $value, $multiline = false)
 
 function wrapEmail($subject, $mainContent, $toEmail)
 {
-    $brandName = 'Aimodel';
-    $tagline = 'Modern AI platform for intelligent automation and sustainable technology.';
+    $brandName = 'Modexa';
+    $tagline = 'One URL for the models in the catalog.';
     $brandColor = '#111318';
     $accent = '#6c5cff';
     return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' . clean($subject) . '</title></head>
@@ -1183,8 +1183,8 @@ function sendOrderPaidEmail($order, $gateway)
         'customer' => false,
         'error' => '',
     );
-    $brandName = 'Aimodel';
-    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'hello@aimodel.example');
+    $brandName = 'Modexa';
+    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'hello@modexa.example');
     $border = '#e5e7eb';
     $brandColor = '#111111';
     $billing = isset($order['billing']) && is_array($order['billing']) ? $order['billing'] : array();
@@ -1251,7 +1251,7 @@ function sendOrderPaidEmail($order, $gateway)
           <tr><td style="padding:10px;">' . $cartHtml . '</td></tr>
         </table></td></tr>';
 
-    $subject = 'Paid order - Aimodel - ' . $orderId;
+    $subject = 'Paid order - Modexa - ' . $orderId;
     $html = wrapEmail($subject, $mainContent, $toEmail);
     $alt .= "Billing: {$name}\nEmail: {$email}\nAmount: {$amount}\n";
 
@@ -1297,14 +1297,14 @@ function sendOrderPaidEmail($order, $gateway)
 
 function sendBarePaidEmail($orderId, $gateway)
 {
-    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'hello@aimodel.example');
+    $toEmail = envVal('ORDER_NOTIFY_EMAIL', 'hello@modexa.example');
     $amount = isset($gateway['amount']) ? (string) $gateway['amount'] : '';
     $txnId = isset($gateway['txn_id']) ? (string) $gateway['txn_id'] : '';
-    $subject = 'Paid order - Aimodel - ' . $orderId;
+    $subject = 'Paid order - Modexa - ' . $orderId;
     $main = '<tr><td style="padding:0 24px 24px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">'
         . kvRow('Order ID', $orderId)
         . kvRow('Amount', $amount)
         . kvRow('Txn ID', $txnId)
         . '</td></tr>';
-    deliverMail($toEmail, 'Aimodel', $subject, wrapEmail($subject, $main, $toEmail), $subject);
+    deliverMail($toEmail, 'Modexa', $subject, wrapEmail($subject, $main, $toEmail), $subject);
 }

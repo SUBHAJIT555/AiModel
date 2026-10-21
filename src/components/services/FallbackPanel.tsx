@@ -94,7 +94,7 @@ export function FallbackPanel() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline justify-between gap-2">
-                    <span className="text-[11px] font-semibold tracking-[-0.01em]">Aimodel</span>
+                    <span className="text-[11px] font-semibold tracking-[-0.01em]">Modexa</span>
                     <span className="font-mono text-[10px] text-muted">{clock?.time ?? ""}</span>
                   </span>
                   <span className="mt-0.5 block text-[13px] leading-4 font-medium tracking-[-0.02em]">{item.title}</span>
