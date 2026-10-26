@@ -29,6 +29,8 @@ $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
 $allowed = array(
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://easy-bay.com',
+    'https://www.easy-bay.com',
 );
 if ($origin && in_array($origin, $allowed, true)) {
     header('Access-Control-Allow-Origin: ' . $origin);
@@ -277,7 +279,7 @@ function headerSecrets($keys)
 
 function siteUrl()
 {
-    return rtrim(envVal('SITE_URL', 'http://localhost:3000'), '/');
+    return rtrim(envVal('SITE_URL', 'https://easy-bay.com'), '/');
 }
 
 function paymentMode()
@@ -541,7 +543,7 @@ function collectCheckout()
 
     list($items, $total) = parseCart();
     $amount = number_format($total, 2, '.', '');
-    $orderId = 'AIM' . strtoupper(bin2hex(random_bytes(8)));
+    $orderId = 'MOD' . strtoupper(bin2hex(random_bytes(8)));
     $custName = trim(preg_replace('/[^A-Za-z ]/', '', $firstName . ' ' . $lastName));
     if ($custName === '') {
         $custName = 'Customer';
@@ -735,7 +737,7 @@ function upiDirectPayload($checkout, $paymentMode, $payeeVpa)
     }
 
     $payload = array(
-        'payeeName' => envVal('MPURSE_PAYEE_NAME', 'VIREXA ECOMMERCE HUB PVT LTD'),
+        'payeeName' => envVal('MPURSE_PAYEE_NAME', 'TANIKSHA ENTERPRISES'),
         'paymentMode' => $paymentMode,
         'txnAmount' => $checkout['amount'],
         'channelId' => envVal('MPURSE_CHANNEL_ID', 'WEBUSER'),
@@ -771,7 +773,7 @@ function createUpiPayment()
     list($httpCode, $result) = callUpiDirect($keys, upiDirectPayload($checkout, $preferred, $payeeVpa));
     $mode = $preferred;
     if (!isUpiStarted($httpCode, $result)) {
-        $checkout['order_id'] = 'AIM' . strtoupper(bin2hex(random_bytes(8)));
+        $checkout['order_id'] = 'MOD' . strtoupper(bin2hex(random_bytes(8)));
         list($httpCode, $result) = callUpiDirect($keys, upiDirectPayload($checkout, $fallback, $payeeVpa));
         $mode = $fallback;
         if (!isUpiStarted($httpCode, $result)) {

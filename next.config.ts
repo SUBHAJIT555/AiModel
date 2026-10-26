@@ -4,6 +4,7 @@ const phpApi = "http://127.0.0.1:8089";
 
 const nextConfig: NextConfig = {
   output: "export",
+  trailingSlash: true,
   reactStrictMode: true,
   images: { unoptimized: true },
   turbopack: {

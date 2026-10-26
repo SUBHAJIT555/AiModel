@@ -1,12 +1,13 @@
-/** Stand-in office. Replace with the real address and number when they are ready. */
+/** Registered merchant for UPI on easy-bay.com. */
 export const contactOffice = {
-  city: "Bengaluru",
-  company: "Modexa",
-  address: "100 Feet Road, Indiranagar, Bengaluru, Karnataka 560038, India",
-  mapsUrl: "https://www.google.com/maps/search/?api=1&query=Indiranagar+Bengaluru",
+  city: "Kalyan",
+  company: "TANIKSHA ENTERPRISES",
+  address: "Shop no C-A12, Shudhanshu Chamber, near Railway Station, Kalyan West, Thane, Maharashtra 421301, India",
+  mapsUrl:
+    "https://www.google.com/maps/search/?api=1&query=Shudhanshu+Chamber+Kalyan+West+Railway+Station+Thane+421301",
   email: "info@easy-bay.com",
-  phone: "+91 80 0000 0000",
-  phoneHref: "tel:+918000000000",
+  phone: "+91 98190 17637",
+  phoneHref: "tel:+919819017637",
   days: "Mon – Sat",
   hours: "10:00 AM – 6:00 PM",
   closed: "Sunday and official holidays",
