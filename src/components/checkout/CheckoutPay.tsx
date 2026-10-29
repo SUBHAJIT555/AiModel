@@ -20,6 +20,13 @@ type StatusPayload = {
   intent_url?: string;
   receipt_sent?: boolean;
   mail_error?: string;
+  kind?: string;
+  credit?: {
+    code: string;
+    original: number;
+    bonus: number;
+    expires_at: string;
+  } | null;
 };
 
 function resolvePayStatus(result: StatusPayload) {
@@ -137,6 +144,8 @@ export function CheckoutPay() {
         receiptSent={details.receipt_sent}
         mailError={details.mail_error}
         paidTotal={amount !== null && Number.isFinite(amount) ? amount : null}
+        kind={details.kind}
+        credit={details.credit}
       />
     );
   }

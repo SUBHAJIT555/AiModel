@@ -15,7 +15,7 @@ export default function PaymentCancelPage() {
       lede="You left before a UPI payment started."
     >
       <div className="flex flex-wrap gap-3">
-        <Button href="/checkout?plan=route&billing=monthly">Return to checkout</Button>
+        <Button href="/checkout?plan=route">Return to checkout</Button>
         <Button href="/pricing" variant="secondary">
           View pricing
         </Button>

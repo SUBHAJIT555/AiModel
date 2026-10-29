@@ -8,21 +8,21 @@ import { Button } from "@/components/ui/Button";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Three paid plans, in rupees. Route is a monthly fee, Volume follows the tokens, and Command adds a region pin and an audit.",
+    "Three paid plans, in rupees. Route is a fixed fee, Volume runs from ₹10 to ₹9,899, and Command adds a region pin and an audit.",
 };
 
 const notes = [
   {
     title: "Route",
-    body: "₹999 a month, or ₹9,990 a year. One endpoint, a route you can set, and the catalog.",
+    body: "₹999 once. One endpoint, a route you can set, and the catalog.",
   },
   {
     title: "Volume",
-    body: "₹80 for each million tokens. The slider runs from 1 million to 1 billion. At the top, that is ₹80,000.",
+    body: "Any amount from ₹10 to ₹9,899. Drag the slider to set what you pay.",
   },
   {
     title: "Command",
-    body: "₹8,999 a month, or ₹89,990 a year. A region pin, an audit of policy changes, and a named contact.",
+    body: "₹8,999 once. A region pin, an audit of policy changes, and a named contact.",
   },
 ];
 
@@ -44,15 +44,15 @@ export default function PricingPage() {
               </span>
             </h1>
             <p className="mt-5 max-w-[460px] text-[15px] leading-7 text-muted md:text-[16px]">
-              Route is a monthly fee. Volume follows the tokens you run. Command is the plan with a region pin and an audit. There is no free plan.
+              Route is a fixed fee. Volume runs from ₹10 to ₹9,899. Command is the plan with a region pin and an audit. There is no free plan.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button href="#plans">
                 See the plans
                 <ArrowRight aria-hidden strokeWidth={1.75} />
               </Button>
-              <Button href="/models" variant="secondary">
-                See the models
+              <Button href="/credits" variant="secondary">
+                Buy credits
               </Button>
             </div>
           </div>
@@ -73,11 +73,11 @@ export default function PricingPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border px-6 py-8 md:px-10">
           <p className="max-w-xl text-[14px] leading-6 text-muted">
-            Prices are in rupees, before tax. India adds CGST 9% and SGST 9%. Elsewhere the receipt is an export of services, at IGST 0%. Choosing a plan here does not charge a card.{" "}
-            <Link href="/contact" className="whitespace-nowrap text-foreground underline decoration-border underline-offset-4">
-              Talk to us
-            </Link>{" "}
-            if the plan needs a change.
+            Prices are in rupees. Credits you buy can be redeemed at checkout.{" "}
+            <Link href="/refund-policy" className="whitespace-nowrap text-foreground underline decoration-border underline-offset-4">
+              Refund policy
+            </Link>
+            .
           </p>
           <Button href="/contact">Talk to us</Button>
         </div>

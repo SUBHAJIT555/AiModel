@@ -1,5 +1,6 @@
 import type { Model } from "@/types/model";
-import { formatInr, usdToInr } from "@/lib/inr";
+import { MAX_PURCHASE_RUPEES, MIN_PURCHASE_RUPEES } from "@/data/pricing";
+import { formatInr } from "@/lib/inr";
 
 export function formatContext(value?: number) {
   if (!value) return "—";
@@ -11,13 +12,8 @@ export function formatContext(value?: number) {
   return `${Math.round(value / 1000)}k`;
 }
 
-export function formatPrice(model: Model) {
-  if (model.unitPrice) return `${formatInr(usdToInr(model.unitPrice.amount))} / ${model.unitPrice.unit}`;
-  if (model.inputPricePerMillion != null && model.outputPricePerMillion != null) {
-    return `${formatInr(usdToInr(model.inputPricePerMillion))} / ${formatInr(usdToInr(model.outputPricePerMillion))} per 1M`;
-  }
-  if (model.inputPricePerMillion != null) return `${formatInr(usdToInr(model.inputPricePerMillion))} / 1M`;
-  return "Usage";
+export function formatPrice(_model?: Model) {
+  return `${formatInr(MIN_PURCHASE_RUPEES)} – ${formatInr(MAX_PURCHASE_RUPEES)}`;
 }
 
 export function contextFloor(value: string, context?: number) {

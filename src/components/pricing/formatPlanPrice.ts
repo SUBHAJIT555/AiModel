@@ -1,23 +1,23 @@
 import type { PricingPlan } from "@/types/pricing";
+import { clampVolumeRupees } from "@/data/pricing";
 import { getModel } from "@/data/models";
 import { formatInr, usdToInr } from "@/lib/inr";
 
-export function formatPlanPrice(plan: PricingPlan, billing: "monthly" | "annual" = "monthly", tokens = 0) {
-  if (plan.variable) return formatInr(usageAmount(plan, tokens));
-  const amount = billing === "annual" ? plan.annualBase : plan.monthlyBase;
+export function formatPlanPrice(plan: PricingPlan, rupees = 0) {
+  if (plan.variable) return formatInr(clampVolumeRupees(rupees));
+  const amount = plan.monthlyBase;
   if (amount == null) return "Custom";
   if (amount === 0) return `${formatInr(0)} platform fee`;
-  if (billing === "annual") return `${formatInr(amount)} / year`;
-  return `${formatInr(amount)} / month`;
+  return formatInr(amount);
 }
 
-export function planAmount(plan: PricingPlan, billing: "monthly" | "annual") {
-  const amount = billing === "annual" ? plan.annualBase : plan.monthlyBase;
-  return amount ?? 0;
+export function planAmount(plan: PricingPlan) {
+  return plan.monthlyBase ?? 0;
 }
 
-export function usageAmount(plan: PricingPlan, tokens: number) {
-  return (plan.ratePerMillion ?? 0) * tokens;
+export function usageAmount(plan: PricingPlan, rupees: number) {
+  if (plan.variable) return clampVolumeRupees(rupees);
+  return (plan.ratePerMillion ?? 0) * rupees;
 }
 
 export function modelRate(modelSlug: string | null) {
@@ -39,9 +39,10 @@ export function modelRate(modelSlug: string | null) {
   };
 }
 
-export function quotedAmount(plan: PricingPlan, billing: "monthly" | "annual", tokens: number, modelSlug: string | null) {
+export function quotedAmount(plan: PricingPlan, tokens: number, modelSlug: string | null, rupees?: number) {
+  if (rupees && rupees > 0) return clampVolumeRupees(rupees);
+  if (plan.variable) return clampVolumeRupees(tokens);
   const rate = modelRate(modelSlug);
-  if (rate) return rate.each * tokens;
-  if (plan.variable) return usageAmount(plan, tokens);
-  return planAmount(plan, billing);
+  if (rate && tokens > 0) return clampVolumeRupees(rate.each * tokens);
+  return planAmount(plan);
 }

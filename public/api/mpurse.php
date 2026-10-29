@@ -54,6 +54,8 @@ if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST')
 
 loadEnvFiles();
 require_once __DIR__ . '/mailer.php';
+define('FD_API', true);
+require_once __DIR__ . '/lib/credits.php';
 
 $inputData = array();
 $rawInput = file_get_contents('php://input');
@@ -78,6 +80,10 @@ if (isGatewayWebhook($inputData)) {
 $action = v('action', 'create_session');
 if ($action === 'create_session') {
     startCheckoutPayment();
+} elseif ($action === 'credit_purchase') {
+    startCreditPurchase();
+} elseif ($action === 'credit_check') {
+    checkCreditToken();
 } elseif ($action === 'status' || $action === 'confirm') {
     confirmPaymentStatus();
 } elseif ($action === 'webhook') {
@@ -516,9 +522,9 @@ function decodeGatewayBody($decoded, $aesKey)
     return is_array($decoded) ? $decoded : array();
 }
 
-function collectCheckout()
+function collectCheckout($requireAddress = true, $requireCart = true)
 {
-    $firstName = v('billing_first_name', v('firstName'));
+    $firstName = v('billing_first_name', v('firstName', v('name')));
     $lastName = v('billing_last_name', v('lastName'));
     $email = v('billing_email', v('email'));
     $phone = normalizePhone(v('billing_phone', v('phone')));
@@ -527,6 +533,12 @@ function collectCheckout()
     $state = v('billing_state', v('state'));
     $postcode = v('billing_postcode', v('postcode'));
     $notes = v('notes');
+
+    if ($lastName === '' && $firstName !== '') {
+        $parts = preg_split('/\s+/', $firstName, 2);
+        $firstName = $parts[0];
+        $lastName = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : $parts[0];
+    }
 
     if ($firstName === '' || $lastName === '') {
         fail(422, 'First name and last name are required.');
@@ -537,11 +549,21 @@ function collectCheckout()
     if (!preg_match('/^[6-9][0-9]{9}$/', $phone)) {
         fail(422, 'Enter a valid 10-digit Indian mobile number.');
     }
-    if ($address === '' || $town === '') {
+    if ($requireAddress && ($address === '' || $town === '')) {
         fail(422, 'Street address and town are required.');
     }
+    if ($address === '') {
+        $address = '—';
+    }
+    if ($town === '') {
+        $town = '—';
+    }
 
-    list($items, $total) = parseCart();
+    $items = array();
+    $total = 0.0;
+    if ($requireCart) {
+        list($items, $total) = parseCart();
+    }
     $amount = number_format($total, 2, '.', '');
     $orderId = 'MOD' . strtoupper(bin2hex(random_bytes(8)));
     $custName = trim(preg_replace('/[^A-Za-z ]/', '', $firstName . ' ' . $lastName));
@@ -582,7 +604,170 @@ function startCheckoutPayment()
     if ($method === 'card' || $method === 'netbanking') {
         fail(422, 'Card and net banking are not available yet. Please pay with UPI.');
     }
-    createUpiPayment();
+    try {
+        $checkout = collectCheckout();
+        $payable = (int) round((float) $checkout['amount']);
+        list($remaining, $credits, , $hash, $info, $error) = applyStoreCredits($payable);
+        if (v('credit_token') !== '' && $error !== '') {
+            fail(422, $error);
+        }
+        if ($credits > 0 && $remaining === 0) {
+            $idem = v('idempotency_key', $checkout['order_id']);
+            list($orderId, $after) = fdRedeemNow($checkout['order_id'], $hash, $credits, 0, $idem);
+            $order = array(
+                'order_id' => $orderId,
+                'amount' => '0.00',
+                'status' => 'SUCCESS',
+                'paid_at' => date('c'),
+                'paid_by' => 'credits',
+                'payment_method' => 'credits',
+                'credit_hold' => $credits,
+                'credit_status' => 'committed',
+                'credit_token_hint' => $info ? $info['hint'] : '',
+                'emailed' => false,
+                'created_at' => date('c'),
+                'billing' => array(
+                    'first_name' => $checkout['first_name'],
+                    'last_name' => $checkout['last_name'],
+                    'email' => $checkout['email'],
+                    'phone' => $checkout['phone'],
+                    'address' => $checkout['address'],
+                    'town' => $checkout['town'],
+                    'state' => $checkout['state'],
+                    'postcode' => $checkout['postcode'],
+                    'notes' => $checkout['notes'],
+                ),
+                'cart' => $checkout['items'],
+            );
+            saveOrder($order);
+            $mailResult = sendOrderPaidEmail($order, array('txn_id' => '', 'amount' => '0.00'));
+            if (!empty($mailResult['merchant'])) {
+                $order['emailed_merchant'] = true;
+            }
+            if (!empty($mailResult['customer'])) {
+                $order['emailed_customer'] = true;
+            }
+            $order['emailed'] = !empty($order['emailed_merchant'])
+                && (empty($checkout['email']) || !empty($order['emailed_customer']));
+            saveOrder($order);
+            ok(array(
+                'order_id' => $orderId,
+                'flow' => 'credits',
+                'amount' => '0.00',
+                'credits_applied' => $credits,
+                'token' => $after,
+                'receipt_sent' => !empty($order['emailed_customer']),
+            ));
+        }
+        $extra = array();
+        if ($credits > 0) {
+            fdReserve($checkout['order_id'], $hash, $credits, 0, creditHoldSeconds());
+            $checkout['amount'] = number_format($remaining, 2, '.', '');
+            $extra['credit_hold'] = $credits;
+            $extra['credit_status'] = 'held';
+            $extra['credit_token_hint'] = $info ? $info['hint'] : '';
+        }
+        createUpiPayment($checkout, $extra);
+    } catch (FdCreditError $e) {
+        fail($e->httpCode, $e->getMessage(), $e->extra);
+    }
+}
+
+function applyStoreCredits($payable)
+{
+    $tokenInput = v('credit_token');
+    $creditUse = v('credit_use');
+    if ($tokenInput === '') {
+        return array($payable, 0, 0, null, null, '');
+    }
+    sweepExpiredHolds(2);
+    list($hash, $info, $error) = fdCheckToken($tokenInput);
+    if (!$info || $error !== '') {
+        return array($payable, 0, 0, $hash, $info, $error);
+    }
+    $max = min((int) $info['available'], max(0, (int) $payable));
+    $use = $creditUse !== '' ? (int) $creditUse : $max;
+    if ($use < 1) {
+        return array($payable, 0, $max, $hash, $info, '');
+    }
+    if ($use > $max) {
+        $use = $max;
+    }
+    return array($payable - $use, $use, $max, $hash, $info, '');
+}
+
+function checkCreditToken()
+{
+    try {
+        sweepExpiredHolds(1);
+        list(, $info, $error) = fdCheckToken(v('credit_token'));
+        if (!$info) {
+            fail(404, $error);
+        }
+        ok(array('token' => $info, 'message' => $error));
+    } catch (FdCreditError $e) {
+        fail($e->httpCode, $e->getMessage(), $e->extra);
+    }
+}
+
+function startCreditPurchase()
+{
+    try {
+        $settings = fdCreditSettings();
+        fdCreditSecret();
+        fdLedger(function () {
+            return true;
+        }, false);
+        $raw = v('amount');
+        if (!preg_match('/^[0-9]{1,7}$/', $raw)) {
+            fail(422, 'Enter a whole rupee amount (no paise).');
+        }
+        $amount = (int) $raw;
+        if ($amount < $settings['min'] || $amount > $settings['max']) {
+            fail(422, 'Enter an amount between Rs ' . $settings['min'] . ' and Rs ' . $settings['max'] . '.');
+        }
+        if ($amount % $settings['step'] !== 0) {
+            fail(422, 'Credits are sold in steps of Rs ' . $settings['step'] . '.');
+        }
+        $bonus = fdTopupBonus($amount);
+        sweepExpiredHolds(1);
+        $checkout = collectCheckout(false, false);
+        $checkout['items'] = array(array(
+            'name' => 'Modexa credits (Rs ' . $amount . ')',
+            'quantity' => 1,
+            'price' => number_format($amount, 2, '.', ''),
+        ));
+        $checkout['amount'] = number_format($amount, 2, '.', '');
+        $checkout['description'] = substr('Modexa credits Rs ' . $amount, 0, 50);
+        createUpiPayment($checkout, array(
+            'kind' => 'credit',
+            'credit_amount' => $amount,
+            'credit_bonus' => $bonus,
+        ));
+    } catch (FdCreditError $e) {
+        fail($e->httpCode, $e->getMessage(), $e->extra);
+    }
+}
+
+function creditHoldSeconds()
+{
+    return ((int) envVal('MPURSE_EXPIRY_MINUTES', '10') + (int) envVal('CREDIT_HOLD_GRACE_MINUTES', '20')) * 60;
+}
+
+function sweepExpiredHolds($limit)
+{
+    try {
+        foreach (fdExpiredHolds(max(1, (int) $limit)) as $orderId) {
+            fdReleaseHold($orderId, 'expired');
+            $order = loadOrder($orderId);
+            if ($order && isset($order['credit_status']) && $order['credit_status'] === 'held') {
+                $order['credit_status'] = 'released';
+                saveOrder($order);
+            }
+        }
+    } catch (FdCreditError $e) {
+        error_log('[credits] sweep failed: ' . $e->getMessage());
+    }
 }
 
 function postEncrypted($url, $keys, $payload)
@@ -758,10 +943,12 @@ function upiDirectPayload($checkout, $paymentMode, $payeeVpa)
     return $payload;
 }
 
-function createUpiPayment()
+function createUpiPayment($checkout = null, $extra = array())
 {
     pruneOldOrders();
-    $checkout = collectCheckout();
+    if ($checkout === null) {
+        $checkout = collectCheckout();
+    }
     $keys = mpurseKeys();
     $payeeVpa = normalizeUpiId(envVal('MPURSE_PAYEE_VPA'));
     if ($payeeVpa !== '' && !isValidUpiId($payeeVpa)) {
@@ -787,7 +974,7 @@ function createUpiPayment()
     $qr = gatewayText($result, array('qr_Data', 'qr_data', 'qrData'));
     $status = strtoupper(gatewayText($result, array('status')));
 
-    saveOrder(array(
+    saveOrder(array_merge(array(
         'order_id' => $checkout['order_id'],
         'amount' => $checkout['amount'],
         'mid' => $keys['mid'],
@@ -812,7 +999,7 @@ function createUpiPayment()
             'notes' => $checkout['notes'],
         ),
         'cart' => $checkout['items'],
-    ));
+    ), $extra));
 
     ok(array(
         'order_id' => $checkout['order_id'],
@@ -979,6 +1166,33 @@ function amountsMatch($left, $right)
     return abs((float) $left - (float) $right) < 0.05;
 }
 
+function settleCreditsOnPaid(&$order, $paymentRef)
+{
+    $credit = null;
+    try {
+        if (isset($order['kind']) && $order['kind'] === 'credit') {
+            if (empty($order['credit_status']) || $order['credit_status'] !== 'issued') {
+                $credit = fdIssueToken(
+                    (string) $order['order_id'],
+                    (int) $order['credit_amount'],
+                    $paymentRef,
+                    isset($order['credit_bonus']) ? (int) $order['credit_bonus'] : 0
+                );
+                $order['credit_status'] = 'issued';
+                $order['credit_token_hint'] = $credit['token']['hint'];
+            } else {
+                $credit = fdIssuedForOrder((string) $order['order_id']);
+            }
+        } elseif (!empty($order['credit_hold']) && (empty($order['credit_status']) || $order['credit_status'] !== 'committed')) {
+            $result = fdCommitHold((string) $order['order_id']);
+            $order['credit_status'] = $result === 'shortfall' ? 'shortfall' : 'committed';
+        }
+    } catch (FdCreditError $e) {
+        error_log('[credits] settle failed: ' . $e->getMessage());
+    }
+    return $credit;
+}
+
 function applyGatewayUpdate($orderId, $gateway, $lookupMiss)
 {
     $order = loadOrder($orderId);
@@ -997,6 +1211,7 @@ function applyGatewayUpdate($orderId, $gateway, $lookupMiss)
         }
     }
 
+    $credit = null;
     $txnId = gatewayText($gateway, array('txn_id', 'txnId'));
     if ($txnId === '') {
         $txnId = $savedTxnId;
@@ -1019,11 +1234,12 @@ function applyGatewayUpdate($orderId, $gateway, $lookupMiss)
             if (empty($order['paid_at'])) {
                 $order['paid_at'] = date('c');
             }
+            $credit = settleCreditsOnPaid($order, $txnId !== '' ? $txnId : $orderId);
             $billingEmail = isset($order['billing']['email']) ? (string) $order['billing']['email'] : '';
             $needsMerchant = empty($order['emailed_merchant']);
             $needsCustomer = $billingEmail !== '' && empty($order['emailed_customer']);
             if ($needsMerchant || $needsCustomer) {
-                $mailResult = sendOrderPaidEmail($order, $gateway);
+                $mailResult = sendOrderPaidEmail($order, $gateway, $credit);
                 if (!empty($mailResult['merchant'])) {
                     $order['emailed_merchant'] = true;
                 }
@@ -1038,6 +1254,13 @@ function applyGatewayUpdate($orderId, $gateway, $lookupMiss)
                     unset($order['mail_error']);
                 }
             }
+        } elseif ($status === 'failed' && !empty($order['credit_hold']) && isset($order['credit_status']) && $order['credit_status'] === 'held') {
+            try {
+                fdReleaseHold($orderId, 'failed');
+                $order['credit_status'] = 'released';
+            } catch (FdCreditError $e) {
+                error_log('[credits] could not release hold ' . $orderId . ': ' . $e->getMessage());
+            }
         }
         saveOrder($order);
     } elseif ($status === 'success') {
@@ -1046,6 +1269,13 @@ function applyGatewayUpdate($orderId, $gateway, $lookupMiss)
 
     $receiptSent = $order && !empty($order['emailed_customer']);
     $mailError = $order && !empty($order['mail_error']) ? (string) $order['mail_error'] : '';
+    if ($credit === null && $order && isset($order['kind']) && $order['kind'] === 'credit' && isset($order['credit_status']) && $order['credit_status'] === 'issued') {
+        try {
+            $credit = fdIssuedForOrder($orderId);
+        } catch (FdCreditError $e) {
+            $credit = null;
+        }
+    }
 
     return array(
         'order_id' => $orderId,
@@ -1062,6 +1292,19 @@ function applyGatewayUpdate($orderId, $gateway, $lookupMiss)
         'payment_mode' => $order && !empty($order['payment_mode']) ? $order['payment_mode'] : '',
         'receipt_sent' => $receiptSent,
         'mail_error' => $mailError,
+        'kind' => $order && !empty($order['kind']) ? $order['kind'] : 'plan',
+        'credit_status' => $order && !empty($order['credit_status']) ? $order['credit_status'] : '',
+        'credit' => $credit ? array(
+            'code' => $credit['code'],
+            'original' => $credit['token']['original'],
+            'paid' => $credit['token']['paid'],
+            'bonus' => $credit['token']['bonus'],
+            'balance' => $credit['token']['balance'],
+            'available' => $credit['token']['available'],
+            'status' => $credit['token']['status'],
+            'created_at' => $credit['token']['created_at'],
+            'expires_at' => $credit['token']['expires_at'],
+        ) : null,
     );
 }
 
@@ -1113,6 +1356,19 @@ function confirmPaymentStatus()
     $orderId = preg_replace('/[^A-Za-z0-9_-]/', '', v('order_id'));
     if ($orderId === '') {
         fail(422, 'Missing order id.');
+    }
+    $order = loadOrder($orderId);
+    if ($order && isset($order['paid_by']) && $order['paid_by'] === 'credits') {
+        ok(array(
+            'order_id' => $orderId,
+            'status' => 'success',
+            'amount' => $order['amount'],
+            'receipt_sent' => !empty($order['emailed_customer']),
+            'mail_error' => !empty($order['mail_error']) ? (string) $order['mail_error'] : '',
+            'kind' => 'plan',
+            'credit_status' => isset($order['credit_status']) ? $order['credit_status'] : 'committed',
+            'payment_method' => 'credits',
+        ));
     }
     list($order, $gateway, $lookupMiss) = lookupGatewayForOrder($orderId);
     ok(applyGatewayUpdate($orderId, $gateway, $lookupMiss));
@@ -1178,7 +1434,7 @@ function wrapEmail($subject, $mainContent, $toEmail)
 </body></html>';
 }
 
-function sendOrderPaidEmail($order, $gateway)
+function sendOrderPaidEmail($order, $gateway, $credit = null)
 {
     $result = array(
         'merchant' => false,
@@ -1251,7 +1507,8 @@ function sendOrderPaidEmail($order, $gateway)
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid ' . $border . ';border-radius:4px;">
           <tr><td style="background:#f3f4f6;padding:8px 10px;font-family:Arial,Helvetica,sans-serif;font-weight:600;color:' . $brandColor . ';">Order Summary</td></tr>
           <tr><td style="padding:10px;">' . $cartHtml . '</td></tr>
-        </table></td></tr>';
+        </table></td></tr>'
+        . creditEmailBlock($order, $credit);
 
     $subject = 'Paid order - Modexa - ' . $orderId;
     $html = wrapEmail($subject, $mainContent, $toEmail);
@@ -1267,7 +1524,9 @@ function sendOrderPaidEmail($order, $gateway)
         $customerIntro =
             '<tr><td style="padding:0 24px 8px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">'
             . '<p>Hi ' . clean($name) . ',</p>'
-            . '<p>Thank you — we received your payment of <strong>₹' . clean($amount) . '</strong> for order <strong>' . clean($orderId) . '</strong>.</p>'
+            . (isset($order['paid_by']) && $order['paid_by'] === 'credits'
+                ? '<p>Thank you — order <strong>' . clean($orderId) . '</strong> was paid in full with your catalog credits.</p>'
+                : '<p>Thank you — we received your payment of <strong>₹' . clean($amount) . '</strong> for order <strong>' . clean($orderId) . '</strong>.</p>')
             . '<p>This is your receipt. Keep the order ID if you need to contact us.</p>'
             . '</td></tr>';
         $result['customer'] = deliverMail(
@@ -1295,6 +1554,26 @@ function sendOrderPaidEmail($order, $gateway)
     }
 
     return $result;
+}
+
+function creditEmailBlock($order, $credit)
+{
+    if (!$order || !isset($order['kind']) || $order['kind'] !== 'credit' || !$credit) {
+        return '';
+    }
+    $token = $credit['token'];
+    $bonus = isset($token['bonus']) ? (int) $token['bonus'] : 0;
+    return '<tr><td style="padding:0 24px 24px;">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #e5e7eb;border-radius:4px;">
+          <tr><td style="background:#f3f4f6;padding:8px 10px;font-family:Arial,Helvetica,sans-serif;font-weight:600;color:#111;">Credit token</td></tr>
+          <tr><td style="padding:10px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">
+            <p style="margin:0 0 8px;">Your catalog credit token. Anyone with this code can spend the balance. Keep it safe.</p>
+            <p style="margin:0 0 10px;font-family:Consolas,Menlo,monospace;font-size:18px;font-weight:700;letter-spacing:1px;">' . clean($credit['code']) . '</p>
+            <p style="margin:0;">Value: <strong>₹' . clean((string) $token['original']) . '</strong>'
+        . ($bonus > 0 ? ' (paid ₹' . clean((string) $token['paid']) . ' + bonus ₹' . clean((string) $bonus) . ')' : '')
+        . ' · Valid until <strong>' . clean(date('j M Y', strtotime($token['expires_at']))) . '</strong></p>
+          </td></tr>
+        </table></td></tr>';
 }
 
 function sendBarePaidEmail($orderId, $gateway)

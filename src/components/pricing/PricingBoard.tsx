@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { motion } from "motion/react";
-import { pricingPlans } from "@/data/pricing";
-import { formatInr, formatMillions } from "@/lib/inr";
-import { easeOut } from "@/components/motion/transitions";
-import { formatPlanPrice, usageAmount } from "@/components/pricing/formatPlanPrice";
+import { MAX_PURCHASE_RUPEES, MIN_PURCHASE_RUPEES, pricingPlans } from "@/data/pricing";
+import { formatInr } from "@/lib/inr";
+import { formatPlanPrice } from "@/components/pricing/formatPlanPrice";
 import WakeSlider from "@/components/pricing/WakeSlider";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -26,8 +23,7 @@ const sliderProps = {
 } as const;
 
 export function PricingBoard() {
-  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
-  const [tokens, setTokens] = useState(20);
+  const [rupees, setRupees] = useState(500);
 
   return (
     <div className="px-6 py-10 md:px-10 md:py-12">
@@ -36,42 +32,18 @@ export function PricingBoard() {
           <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">Plans</p>
           <h2 className="mt-2 text-[22px] font-medium tracking-[-0.03em]">Three ways to pay for the route.</h2>
         </div>
-        <div className="inline-flex self-start rounded-full bg-[#f1f3f6] p-1" role="group" aria-label="Billing period">
-          {(["monthly", "annual"] as const).map((cycle) => {
-            const selected = billing === cycle;
-            return (
-              <button
-                key={cycle}
-                type="button"
-                aria-pressed={selected}
-                className="relative h-8 rounded-full px-3.5 text-[13px] capitalize"
-                onClick={() => setBilling(cycle)}
-              >
-                {selected ? (
-                  <motion.span
-                    layoutId="billing-cycle"
-                    aria-hidden
-                    className="absolute inset-0 rounded-full bg-foreground shadow-[0_2px_6px_rgb(17_19_24/0.18)]"
-                    transition={{ duration: 0.28, ease: easeOut }}
-                  />
-                ) : null}
-                <span className={`relative ${selected ? "text-surface" : "text-muted"}`}>{cycle}</span>
-              </button>
-            );
-          })}
-        </div>
+        <Button href="/credits" variant="secondary">
+          Buy credits
+        </Button>
       </div>
       <p className="mt-3 max-w-xl text-[13px] leading-6 text-muted">
-        A year on Route or Command is ten months of the monthly fee. Volume does not switch. It stays on the token rate.
+        Route and Command are a single fee. Volume and credits both run from ₹10 to ₹9,899.
       </p>
 
       <ul className="mt-8 grid items-center gap-4 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.24fr)_minmax(0,0.88fr)] lg:gap-2">
         {pricingPlans.map((plan) => {
           const variable = Boolean(plan.variable);
-          const total = variable ? usageAmount(plan, tokens) : 0;
-          const href = variable
-            ? `/checkout?plan=${plan.id}&billing=monthly&tokens=${tokens}&unit=million`
-            : `/checkout?plan=${plan.id}&billing=${billing}`;
+          const href = variable ? `/checkout?plan=${plan.id}&amount=${rupees}` : `/checkout?plan=${plan.id}`;
           return (
             <li
               key={plan.id}
@@ -86,31 +58,33 @@ export function PricingBoard() {
                 {plan.featured ? <Badge tone="primary">Custom</Badge> : <span aria-hidden className="h-5" />}
               </div>
               <p className="mt-5 text-[32px] leading-none font-medium tracking-[-0.04em]">
-                {variable ? formatInr(total) : formatPlanPrice(plan, billing)}
+                {variable ? formatInr(rupees) : formatPlanPrice(plan)}
               </p>
               <p className="mt-2 h-4 font-mono text-[12px] tracking-[0.04em] text-muted uppercase">
-                {variable ? `${formatInr(plan.ratePerMillion ?? 0)} / 1M tokens` : billing === "annual" ? "Billed yearly" : "Billed monthly"}
+                {variable ? `${formatInr(MIN_PURCHASE_RUPEES)} – ${formatInr(MAX_PURCHASE_RUPEES)}` : "One-time fee"}
               </p>
               <div className="mt-5 flex h-[88px] flex-col justify-center">
                 {variable ? (
                   <>
                     <WakeSlider
                       {...sliderProps}
-                      value={tokens}
-                      min={1}
-                      max={1000}
+                      value={rupees}
+                      min={MIN_PURCHASE_RUPEES}
+                      max={MAX_PURCHASE_RUPEES}
                       step={1}
-                      ariaLabel="Token volume in millions"
-                      formatValue={formatMillions}
-                      onChange={setTokens}
+                      ariaLabel="Volume amount in rupees"
+                      formatValue={formatInr}
+                      onChange={setRupees}
                     />
-                    <p className="mt-2 text-[14px] font-medium tracking-[-0.02em]">{formatMillions(tokens)} tokens</p>
+                    <p className="mt-2 text-[14px] font-medium tracking-[-0.02em]">
+                      {formatInr(MIN_PURCHASE_RUPEES)} to {formatInr(MAX_PURCHASE_RUPEES)}
+                    </p>
                   </>
                 ) : (
                   <p className="text-[13px] leading-6 text-muted">
                     {plan.id === "command"
-                      ? "The higher fee. A year is ten months of the monthly price."
-                      : "The smaller fee. A year is ten months of the monthly price."}
+                      ? "The higher fee. Pin a region and keep an audit."
+                      : "The smaller fee. One endpoint and a route you can set."}
                   </p>
                 )}
               </div>

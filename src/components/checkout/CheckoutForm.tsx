@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { getModel } from "@/data/models";
-import { getPlan } from "@/data/pricing";
+import { clampVolumeRupees, getPlan } from "@/data/pricing";
 import { OrderReceipt } from "@/components/checkout/OrderReceipt";
 import { modelRate, quotedAmount } from "@/components/pricing/formatPlanPrice";
-import { formatMillions } from "@/lib/inr";
+import { formatInr, formatMillions } from "@/lib/inr";
 import { Button } from "@/components/ui/Button";
 import { saveCheckout } from "@/lib/demo-checkout";
 
@@ -21,16 +21,17 @@ const countries = ["India", "United States", "United Kingdom", "Germany", "Singa
 export function CheckoutForm() {
   const params = useSearchParams();
   const router = useRouter();
-  const billing = params.get("billing") === "annual" ? "annual" : "monthly";
   const plan = getPlan(params.get("plan"));
   const model = getModel(params.get("model") ?? "");
   const tokens = Number(params.get("tokens")) || 0;
   const unit = params.get("unit");
+  const rupees = Number(params.get("amount")) || 0;
   const rate = modelRate(model?.slug ?? null);
-  const amount = quotedAmount(plan, billing, tokens, model?.slug ?? null);
-  const volume =
-    tokens > 0 && (plan.variable || rate)
-      ? unit === "million" || (!unit && plan.variable)
+  const amount = quotedAmount(plan, tokens, model?.slug ?? null, rupees);
+  const volume = plan.variable
+    ? formatInr(clampVolumeRupees(rupees || amount))
+    : tokens > 0 && rate
+      ? unit === "million"
         ? `${formatMillions(tokens)} tokens`
         : `${tokens} ${unit ?? "units"}`
       : null;
@@ -52,7 +53,7 @@ export function CheckoutForm() {
     }
     saveCheckout({
       plan: plan.id,
-      billing,
+      billing: "monthly",
       model: model?.slug,
       name: [first, middle, last].filter(Boolean).join(" "),
       company: String(formData.get("company") ?? ""),
@@ -63,11 +64,13 @@ export function CheckoutForm() {
       city,
       zip,
       tokens: tokens > 0 ? tokens : undefined,
+      rupees: plan.variable ? amount : undefined,
     });
-    const query = new URLSearchParams({ plan: plan.id, billing, country });
+    const query = new URLSearchParams({ plan: plan.id, country });
     if (model) query.set("model", model.slug);
     if (tokens) query.set("tokens", String(tokens));
     if (unit) query.set("unit", unit);
+    if (plan.variable) query.set("amount", String(amount));
     router.push(`/checkout/payment?${query.toString()}`);
   }
 
@@ -111,7 +114,6 @@ export function CheckoutForm() {
       </div>
       <OrderReceipt
         planName={plan.name}
-        billing={billing}
         variable={Boolean(plan.variable)}
         subtotal={amount}
         country={country}

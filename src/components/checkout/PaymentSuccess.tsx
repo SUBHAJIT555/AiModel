@@ -8,19 +8,28 @@ import { Button } from "@/components/ui/Button";
 import { easeOut } from "@/components/motion/transitions";
 import { contactOffice } from "@/data/contact";
 import { getModel } from "@/data/models";
-import { getPlan } from "@/data/pricing";
+import { clampVolumeRupees, getPlan } from "@/data/pricing";
 import { quotedAmount } from "@/components/pricing/formatPlanPrice";
-import { formatMillions } from "@/lib/inr";
+import { formatInr, formatMillions } from "@/lib/inr";
 import { readCheckout, type DemoCheckout } from "@/lib/demo-checkout";
+
+type IssuedCredit = {
+  code: string;
+  original: number;
+  bonus: number;
+  expires_at: string;
+};
 
 type PaymentSuccessProps = {
   orderId?: string;
   receiptSent?: boolean;
   mailError?: string;
   paidTotal?: number | null;
+  credit?: IssuedCredit | null;
+  kind?: string;
 };
 
-export function PaymentSuccess({ orderId, receiptSent, mailError, paidTotal }: PaymentSuccessProps) {
+export function PaymentSuccess({ orderId, receiptSent, mailError, paidTotal, credit, kind }: PaymentSuccessProps) {
   const params = useSearchParams();
   const reduce = useReducedMotion();
   const [checkout, setCheckout] = useState<DemoCheckout | null>(null);
@@ -33,14 +42,15 @@ export function PaymentSuccess({ orderId, receiptSent, mailError, paidTotal }: P
 
   const planId = checkout?.plan || params.get("plan") || "volume";
   const plan = getPlan(planId);
-  const billing = checkout?.billing || (params.get("billing") === "annual" ? "annual" : "monthly");
   const country = checkout?.country || params.get("country") || "India";
   const model = getModel(checkout?.model || params.get("model") || "");
   const order = orderId || params.get("order_id") || params.get("order") || checkout?.order || "";
-  const tokens = resolveTokens(checkout?.tokens, params.get("tokens"), plan.variable, plan.ratePerMillion, country, paidTotal);
-  const subtotal = quotedAmount(plan, billing, tokens, model?.slug ?? null);
-  const volume =
-    tokens > 0 && (plan.variable || model)
+  const tokens = resolveTokens(checkout?.tokens, params.get("tokens"), plan.variable, plan.ratePerMillion, paidTotal);
+  const rupees = checkout?.rupees || Number(params.get("amount")) || (plan.variable ? paidTotal || 0 : 0);
+  const subtotal = quotedAmount(plan, tokens, model?.slug ?? null, rupees);
+  const volume = plan.variable
+    ? formatInr(clampVolumeRupees(rupees || subtotal))
+    : tokens > 0 && model
       ? `${formatMillions(tokens)} tokens`
       : null;
   const note = receiptNote({
@@ -59,7 +69,7 @@ export function PaymentSuccess({ orderId, receiptSent, mailError, paidTotal }: P
             Payment received.
           </h1>
           <p className="mt-3 max-w-sm text-center text-[15px] leading-7 text-muted">{ready ? note : "Confirming the order."}</p>
-          {ready ? (
+          {ready && kind !== "credit" ? (
             <motion.div
               className="relative mt-8 w-full max-w-[320px]"
               initial={reduce ? false : { opacity: 0, y: 28 }}
@@ -68,7 +78,6 @@ export function PaymentSuccess({ orderId, receiptSent, mailError, paidTotal }: P
             >
               <OrderReceipt
                 planName={plan.name}
-                billing={billing}
                 variable={!!plan.variable}
                 subtotal={subtotal}
                 country={country}
@@ -84,10 +93,11 @@ export function PaymentSuccess({ orderId, receiptSent, mailError, paidTotal }: P
               <PaidStamp reduce={!!reduce} />
             </motion.div>
           ) : null}
+          {credit?.code ? <CreditTokenCard credit={credit} /> : null}
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button href="/">Back to home</Button>
-            <Button href="/models" variant="secondary">
-              See the models
+            <Button href={kind === "credit" ? "/credits" : "/models"} variant="secondary">
+              {kind === "credit" ? "Buy more credits" : "See the models"}
             </Button>
           </div>
         </div>
@@ -101,15 +111,13 @@ function resolveTokens(
   query: string | null,
   variable: boolean | undefined,
   rate: number | undefined,
-  country: string,
   paidTotal?: number | null,
 ) {
   if (saved && saved > 0) return saved;
   const fromQuery = Number(query);
   if (fromQuery > 0) return fromQuery;
   if (variable && paidTotal && paidTotal > 0 && rate) {
-    const taxable = country === "India" ? paidTotal / 1.18 : paidTotal;
-    return Math.max(1, Math.round(taxable / rate));
+    return Math.max(1, Math.round(paidTotal / rate));
   }
   return variable ? 20 : 0;
 }
@@ -136,6 +144,39 @@ function receiptNote({
     return `${orderLine}Payment recorded for ${email}. The receipt email sends once mail is configured.`;
   }
   return `${orderLine}Payment recorded. Keep this receipt.`;
+}
+
+function CreditTokenCard({ credit }: { credit: IssuedCredit }) {
+  const expires = new Date(credit.expires_at).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  return (
+    <div className="mt-8 w-full max-w-md rounded-[22px] border border-border bg-surface p-6 text-center">
+      <p className="font-mono text-[12px] tracking-[0.08em] text-muted uppercase">Your credit token</p>
+      <p className="mt-3 font-mono text-[20px] font-medium tracking-[0.08em] break-all">{credit.code}</p>
+      <p className="mt-3 text-[14px] leading-6 text-muted">
+        {formatInr(credit.original)}
+        {credit.bonus > 0 ? ` including ${formatInr(credit.bonus)} bonus` : ""}. Valid until {expires}. Anyone with this
+        code can spend the balance — copy it and keep it safe.
+      </p>
+      <div className="mt-5 flex flex-wrap justify-center gap-3">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => {
+            void navigator.clipboard?.writeText(credit.code);
+          }}
+        >
+          Copy token
+        </Button>
+        <Button href="/credits#balance" variant="ghost">
+          Check balance later
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 function CheckMark({ reduce }: { reduce: boolean }) {

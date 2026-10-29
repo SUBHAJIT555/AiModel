@@ -45,16 +45,16 @@ export const legalDocs: Record<LegalDoc["slug"], LegalDoc> = {
       {
         title: "Plans and the bill",
         body: [
-          `The plans on the pricing page are Route, Volume, and Command. There is no free plan. Amounts are in Indian rupees. Volume follows ₹80 for each million tokens, up to the top of the slider.`,
-          `A bill addressed to India shows CGST at 9% and SGST at 9%, added on top of the plan. A bill addressed anywhere else shows IGST at 0% and is labeled as an export of services.`,
+          `The plans on the pricing page are Route, Volume, and Command. There is no free plan and no monthly or yearly cycle. Amounts are in Indian rupees. Volume is any amount from ₹10 to ₹9,899.`,
+          `You can also buy catalog credits from ₹10 to ₹9,899 and redeem them at checkout. A token is valid for the number of days set in CREDIT_VALIDITY_DAYS. Unused balance stays on the token until it expires.`,
           `Prices on the site can change. A figure on a page is the figure for that demonstration, not a quote that locks a later contract.`,
         ],
       },
       {
         title: "Checkout does not take payment",
         body: [
-          `The checkout writes a draft in your browser so you can see the receipt. It does not charge a card, open a workspace, or start a subscription.`,
-          `A paid gateway, if ${name} offers one later, will have its own order step and its own confirmation. Until that exists, nothing on this site is an invoice you have to pay.`,
+          `Checkout can take a UPI payment for a plan or for catalog credits. You can redeem a credit token on the payment step. If a token will not redeem, write to ${contactOffice.email} as described on the refund policy page.`,
+          `Credits are not cash. A refund of unused credits covers only the unused amount you actually paid, not promotional bonus credit.`,
         ],
       },
       {
@@ -182,7 +182,7 @@ export const legalDocs: Record<LegalDoc["slug"], LegalDoc> = {
         title: "What is stored",
         body: [
           `A cookie is a small file a site asks your browser to keep. This site does not use cookies to follow you across other websites, and it does not load an ad network.`,
-          `Checkout saves one draft under the key modexa-demo-checkout in session storage. Session storage is not a cookie, but it is the same idea: a note your browser holds for this site. It contains the plan, the billing period, the model if you chose one, and the name, company, email, country, phone, address, city, and zip code you typed.`,
+          `Checkout saves one draft under the key modexa-demo-checkout in session storage. Session storage is not a cookie, but it is the same idea: a note your browser holds for this site. It contains the plan, the model if you chose one, and the name, company, email, country, phone, address, city, and zip code you typed.`,
         ],
       },
       {
@@ -277,4 +277,5 @@ export const legalNav = [
   { href: "/legal/privacy", label: "Privacy", slug: "privacy" },
   { href: "/legal/cookies", label: "Cookies", slug: "cookies" },
   { href: "/legal/acceptable-use", label: "Acceptable use", slug: "acceptable-use" },
+  { href: "/refund-policy", label: "Refunds", slug: "refund" },
 ] as const;

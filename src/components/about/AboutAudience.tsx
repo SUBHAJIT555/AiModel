@@ -26,7 +26,7 @@ export function AboutAudience() {
               Product engineers post once. Chat, image, audio, or video. When the model changes, they change the name, not the client.
             </p>
             <p>
-              Platform teams set the route, the fallback, and which models a workspace may use. Finance reads the plan in rupees. On an India receipt, that is CGST and SGST. Elsewhere it is marked as an export of services.
+              Platform teams set the route, the fallback, and which models a workspace may use. Finance reads the plan in rupees.
             </p>
           </div>
           <ul className="mt-8 flex flex-wrap items-center gap-3">

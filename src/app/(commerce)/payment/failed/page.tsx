@@ -15,8 +15,8 @@ export default function PaymentFailedPage() {
       lede="The UPI payment did not finish. You can start it again from checkout."
     >
       <div className="flex flex-wrap gap-3">
-        <Button href="/checkout/payment?plan=route&billing=monthly">Try again</Button>
-        <Button href="/checkout?plan=route&billing=monthly" variant="secondary">
+        <Button href="/checkout/payment?plan=route">Try again</Button>
+        <Button href="/checkout?plan=route" variant="secondary">
           Return to checkout
         </Button>
       </div>

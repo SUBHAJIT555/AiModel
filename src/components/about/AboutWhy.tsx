@@ -28,7 +28,7 @@ const reasons = [
   },
   {
     title: "Priced in rupees",
-    body: "Route, Volume, and Command are listed in INR. Volume follows ₹80 for each million tokens.",
+    body: "Route, Volume, and Command are listed in INR. Volume runs from ₹10 to ₹9,899.",
     icon: IndianRupee,
   },
 ];

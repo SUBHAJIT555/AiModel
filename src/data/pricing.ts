@@ -1,24 +1,32 @@
 import type { PricingPlan } from "@/types/pricing";
 
-/** Paid plans, in rupees. Volume is priced from the token slider. */
+/** Volume and credit meters, in rupees. */
+export const MIN_PURCHASE_RUPEES = 10;
+export const MAX_PURCHASE_RUPEES = 9899;
+
+export function clampVolumeRupees(value: number) {
+  const amount = Math.round(Number(value) || 0);
+  return Math.min(MAX_PURCHASE_RUPEES, Math.max(MIN_PURCHASE_RUPEES, amount));
+}
+
+/** Paid plans, in rupees. Volume is priced from the rupee slider. */
 export const pricingPlans: PricingPlan[] = [
   {
     id: "route",
     name: "Route",
-    description: "A monthly fee. One endpoint, the catalog, and a route you can set.",
+    description: "A fixed fee. One endpoint, the catalog, and a route you can set.",
     monthlyBase: 999,
-    annualBase: 9990,
     features: ["One shared endpoint", "Routing, if you want it", "The catalog", "Email support"],
     cta: "Choose Route",
   },
   {
     id: "volume",
     name: "Volume",
-    description: "Move the slider. The amount follows ₹80 for each million tokens.",
+    description: "Move the slider. Any amount from ₹10 to ₹9,899.",
     variable: true,
     ratePerMillion: 80,
     featured: true,
-    features: ["A fallback list", "Usage you can export", "Workspace controls", "The token rate on the slider"],
+    features: ["A fallback list", "Usage you can export", "Workspace controls", "Pay the amount on the slider"],
     cta: "Choose Volume",
   },
   {
@@ -26,7 +34,6 @@ export const pricingPlans: PricingPlan[] = [
     name: "Command",
     description: "The higher fee. Pin a region, keep an audit, and name a contact.",
     monthlyBase: 8999,
-    annualBase: 89990,
     features: ["Region pins", "An audit of policy changes", "A named contact", "A cap on usage"],
     cta: "Choose Command",
   },

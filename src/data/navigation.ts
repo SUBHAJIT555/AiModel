@@ -13,6 +13,7 @@ const featuredModels = models
 export const primaryNav: NavItem[] = [
   { label: "Models", href: "/models", mega: "models" },
   { label: "Services", href: "/services", mega: "services" },
+  { label: "Credits", href: "/credits" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
@@ -24,6 +25,8 @@ export const footerColumns: FooterColumn[] = [
       { label: "Home", href: "/" },
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Credits", href: "/credits" },
     ],
   },
   {
@@ -37,8 +40,10 @@ export const footerColumns: FooterColumn[] = [
     title: "Services",
     links: [
       { label: "All services", href: "/services" },
-      ...services.map((service) => ({ label: service.name, href: `/services/${service.slug}` })),
-      { label: "Pricing", href: "/pricing" },
+      ...services.map((service) => ({
+        label: service.name,
+        href: `/services/#${service.anchor}`,
+      })),
     ],
   },
   {
@@ -48,6 +53,7 @@ export const footerColumns: FooterColumn[] = [
       { label: "Privacy", href: "/legal/privacy" },
       { label: "Cookies", href: "/legal/cookies" },
       { label: "Acceptable use", href: "/legal/acceptable-use" },
+      { label: "Refund policy", href: "/refund-policy" },
     ],
   },
 ];

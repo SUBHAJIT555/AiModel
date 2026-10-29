@@ -27,6 +27,18 @@ export type MpurseStartResponse = {
   order_id?: string;
   pay_url?: string;
   amount?: string | number;
+  flow?: "upi" | "credits" | "hosted";
+  credit?: {
+    code: string;
+    original: number;
+    paid: number;
+    bonus: number;
+    balance: number;
+    available: number;
+    status: string;
+    created_at: string;
+    expires_at: string;
+  } | null;
 };
 
 export async function startMpurseCheckout(payload: Record<string, unknown>): Promise<MpurseStartResponse> {

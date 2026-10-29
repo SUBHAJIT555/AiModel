@@ -6,7 +6,6 @@ import { formatContext } from "@/components/models/format";
 import { BrandWatermark } from "@/components/models/BrandWatermark";
 import { ModelQuote } from "@/components/models/ModelQuote";
 import { ProviderMark } from "@/components/models/ProviderMark";
-import { usdToInr } from "@/lib/inr";
 import type { Model } from "@/types/model";
 
 type PageProps = {
@@ -78,17 +77,6 @@ function aboutLine(model: Model) {
   return `You send ${reads}. It returns ${writes}.${context}${reply}.`;
 }
 
-function quoteFor(model: Model) {
-  if (model.unitPrice) {
-    return { each: usdToInr(model.unitPrice.amount), unit: model.unitPrice.unit };
-  }
-  return {
-    each: usdToInr(model.inputPricePerMillion ?? 0),
-    output: model.outputPricePerMillion != null ? usdToInr(model.outputPricePerMillion) : undefined,
-    unit: "million",
-  };
-}
-
 export default async function ModelDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const model = getModel(slug);
@@ -98,8 +86,6 @@ export default async function ModelDetailPage({ params }: PageProps) {
   const sameProvider = related.every((item) => item.providerSlug === model.providerSlug);
   const tags = [...new Set([...model.capabilities, ...model.categories])];
   const facts = factsFor(model);
-  const quote = quoteFor(model);
-
   return (
     <section className="bg-surface -mt-[5.5rem] pt-[5.5rem] pb-10 md:-mt-[7.5rem] md:pt-[7.5rem]">
       <div className="home-frame">
@@ -135,7 +121,7 @@ export default async function ModelDetailPage({ params }: PageProps) {
               ))}
             </dl>
           </div>
-          <ModelQuote slug={model.slug} each={quote.each} output={quote.output} unit={quote.unit} />
+          <ModelQuote slug={model.slug} />
           </div>
         </div>
 

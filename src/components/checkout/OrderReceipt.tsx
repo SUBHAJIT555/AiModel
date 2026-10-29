@@ -1,6 +1,5 @@
 import { LogoMark } from "@/components/layout/LogoMark";
 import { ProviderMark } from "@/components/models/ProviderMark";
-import { gstBreakup } from "@/lib/gst";
 import { formatInr } from "@/lib/inr";
 import { siteConfig } from "@/lib/site";
 
@@ -15,7 +14,6 @@ const bars = [2, 1, 1, 3, 1, 2, 1, 1, 4, 1, 2, 1, 3, 1, 1, 2, 1, 4, 1, 2, 1, 1, 
 
 export function OrderReceipt({
   planName,
-  billing,
   variable,
   subtotal,
   country,
@@ -24,9 +22,9 @@ export function OrderReceipt({
   method,
   paid = false,
   orderId,
+  creditsApplied = 0,
 }: {
   planName: string;
-  billing: "monthly" | "annual";
   variable: boolean;
   subtotal: number;
   country: string;
@@ -35,10 +33,11 @@ export function OrderReceipt({
   method?: string;
   paid?: boolean;
   orderId?: string;
+  creditsApplied?: number;
 }) {
-  const gst = gstBreakup(subtotal, country);
-  const showBrands = !model && (variable || billing === "monthly");
-  const period = billing === "annual" ? "Yearly" : "Monthly";
+  const showBrands = !model || variable;
+  const credit = Math.min(Math.max(0, Math.round(creditsApplied)), subtotal);
+  const due = Math.max(0, subtotal - credit);
 
   return (
     <aside
@@ -54,9 +53,7 @@ export function OrderReceipt({
         </span>
         <span className="text-black/55">{country}</span>
       </div>
-      <p className="mt-2 font-mono text-[11px] text-black/55">
-        {planName} · {period}
-      </p>
+      <p className="mt-2 font-mono text-[11px] text-black/55">{planName}</p>
       {orderId ? <p className="mt-1 font-mono text-[11px] text-black/55">Order {orderId}</p> : null}
       {model ? (
         <p className="mt-3 flex items-center gap-2 font-mono text-[12px]">
@@ -84,27 +81,27 @@ export function OrderReceipt({
       ) : null}
       <Rule />
       <dl className="space-y-1.5 font-mono text-[12px]">
-        {volume ? <Row label={volume} value={formatInr(gst.taxable)} /> : <Row label={planName} value={formatInr(gst.taxable)} />}
+        {volume ? <Row label={volume} value={formatInr(subtotal)} /> : <Row label={planName} value={formatInr(subtotal)} />}
         {method ? <Row label={method} value="" /> : null}
       </dl>
-      <Rule />
-      <dl className="space-y-1.5 font-mono text-[12px]">
-        <Row label="Subtotal" value={formatInr(gst.taxable)} />
-        {gst.lines.map((line) => (
-          <Row key={line.label} label={line.label} value={formatInr(line.amount)} />
-        ))}
-      </dl>
-      <p className="mt-2 font-mono text-[10px] tracking-[0.08em] text-black/40 uppercase">{gst.note}</p>
-      <Rule />
+      {credit > 0 ? (
+        <>
+          <Rule />
+          <dl className="space-y-1.5 font-mono text-[12px]">
+            <Row label="Credits applied" value={`−${formatInr(credit)}`} />
+            <Row label="Payable now" value={formatInr(due)} />
+          </dl>
+        </>
+      ) : null}
       <div className="flex items-baseline justify-between font-mono font-semibold">
         <span className="text-[12px] tracking-[0.08em]">TOTAL</span>
-        <span className="text-[16px]">{formatInr(gst.total)}</span>
+        <span className="text-[16px]">{formatInr(due)}</span>
       </div>
       <Rule />
       <p className="text-center text-[13px] font-semibold tracking-[0.16em]">THANK YOU</p>
       <Barcode />
       <p className="mt-2 text-center font-mono text-[10px] tracking-[0.06em] text-black/40 uppercase">
-        {paid ? "Paid by UPI" : "Payable by UPI"}
+        {paid ? (due === 0 && credit > 0 ? "Paid with credits" : "Paid by UPI") : due === 0 && credit > 0 ? "Covered by credits" : "Payable by UPI"}
       </p>
     </aside>
   );

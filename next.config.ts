@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         { source: "/api/mpurse.php", destination: `${phpApi}/mpurse.php` },
         { source: "/api/mpurse-webhook.php", destination: `${phpApi}/mpurse-webhook.php` },
+        { source: "/api/merchant.php", destination: `${phpApi}/merchant.php` },
         { source: "/api/submit.php", destination: `${phpApi}/submit.php` },
         { source: "/mail.php", destination: `${phpApi}/submit.php` },
       ],

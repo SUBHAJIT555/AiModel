@@ -12,6 +12,7 @@ export type DemoCheckout = {
   zip: string;
   order?: string;
   tokens?: number;
+  rupees?: number;
 };
 
 const key = "modexa-demo-checkout";
